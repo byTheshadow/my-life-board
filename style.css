@@ -1,0 +1,1496 @@
+/* ============================================================
+   区块开始：CSS 变量 -亮色主题
+   ============================================================ */
+:root {
+  --bg-glass: rgba(255, 255, 255, 0.62);
+  --bg-glass-heavy: rgba(255, 255, 255, 0.78);
+  --bg-glass-light: rgba(255, 255, 255, 0.35);
+  --bg-solid: #ffffff;
+  --bg-body: #f0f2f5;
+  --text-primary: #1a1a2e;
+  --text-secondary: #64748b;
+  --text-tertiary: #94a3b8;
+  --border-color: rgba(255, 255, 255, 0.45);
+  --border-subtle: rgba(0, 0, 0, 0.06);
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.06);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.08);
+  --shadow-glow: 0 0 0 transparent;
+  --accent: #6366f1;
+  --accent-light: rgba(99,102,241,0.12);
+  --accent-text: #4f46e5;
+  --danger: #ef4444;
+  --danger-light: rgba(239,68,68,0.1);
+  --success: #22c55e;
+  --success-light: rgba(34,197,94,0.1);
+  --warning: #f59e0b;
+  --warning-light: rgba(245,158,11,0.1);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+  --blur-amount: 20px;
+  --nav-height: 68px;
+  --topbar-height: 52px;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-mono: "SF Mono", "Fira Code", "Cascadia Code", monospace;
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s ease;
+  --transition-slow: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* 课程颜色 */
+  --course-blue: #3b82f6;
+  --course-blue-bg: rgba(59,130,246,0.12);
+  --course-green: #22c55e;
+  --course-green-bg: rgba(34,197,94,0.12);
+  --course-purple: #a855f7;
+  --course-purple-bg: rgba(168,85,247,0.12);
+  --course-coral: #f97316;
+  --course-coral-bg: rgba(249,115,22,0.12);
+  --course-amber: #f59e0b;
+  --course-amber-bg: rgba(245,158,11,0.12);
+  --course-pink: #ec4899;
+  --course-pink-bg: rgba(236,72,153,0.12);
+}
+/* ============================================================
+   区块结束：CSS 变量 - 亮色主题
+   ============================================================ */
+
+/* ============================================================
+   区块开始：CSS 变量 - 暗色主题
+   ============================================================ */
+[data-theme="dark"] {
+  --bg-glass: rgba(30, 30, 50, 0.65);
+  --bg-glass-heavy: rgba(25, 25, 45, 0.82);
+  --bg-glass-light: rgba(40, 40, 65, 0.4);
+  --bg-solid: #13131f;
+  --bg-body: #0c0c18;
+  --text-primary: #e8e8f0;
+  --text-secondary: #9898b0;
+  --text-tertiary: #6a6a85;
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.2);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.3);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.4);
+  --shadow-glow: 0 0 20px rgba(99,102,241,0.08);
+  --accent: #818cf8;
+  --accent-light: rgba(129,140,248,0.15);
+  --accent-text: #a5b4fc;
+  --danger: #f87171;
+  --danger-light: rgba(248,113,113,0.15);
+  --success: #4ade80;
+  --success-light: rgba(74,222,128,0.15);
+  --warning: #fbbf24;
+  --warning-light: rgba(251,191,36,0.15);
+
+  --course-blue-bg: rgba(59,130,246,0.2);
+  --course-green-bg: rgba(34,197,94,0.2);
+  --course-purple-bg: rgba(168,85,247,0.2);
+  --course-coral-bg: rgba(249,115,22,0.2);
+  --course-amber-bg: rgba(245,158,11,0.2);
+  --course-pink-bg: rgba(236,72,153,0.2);
+}
+/* ============================================================
+   区块结束：CSS 变量 - 暗色主题
+   ============================================================ */
+
+/* ============================================================
+   区块开始：全局基础样式
+   ============================================================ */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+  background: var(--bg-body);
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.5;-webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button {
+  font-family: inherit;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: inherit;
+  font-size: inherit;
+}
+
+input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--text-tertiary);
+  border-radius: 4px;
+}
+
+::selection {
+  background: var(--accent);
+  color: white;
+}
+/* ============================================================
+   区块结束：全局基础样式
+   ============================================================ */
+
+/* ============================================================
+   区块开始：背景层
+   ============================================================ */
+.bg-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-size: cover;
+  background-position: center;
+  transition: opacity var(--transition-slow);
+}
+
+.bg-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  background: rgba(255,255,255,0.05);
+  pointer-events: none;
+}
+
+[data-theme="dark"] .bg-overlay {
+  background: rgba(0,0,0,0.25);
+}
+/* ============================================================
+   区块结束：背景层
+   ============================================================ */
+
+/* ============================================================
+   区块开始：毛玻璃卡片通用样式
+   ============================================================ */
+.glass-card {
+  background: var(--bg-glass);
+  backdrop-filter: blur(var(--blur-amount));
+  -webkit-backdrop-filter: blur(var(--blur-amount));
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: 16px;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.glass-card:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+.glass-modal {
+  background: var(--bg-glass-heavy);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg), var(--shadow-glow);
+}
+
+.glass-input {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--bg-glass-light);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.glass-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-light);
+}
+
+.glass-input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.glass-textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.6;
+}
+/* ============================================================
+   区块结束：毛玻璃卡片通用样式
+   ============================================================ */
+
+/* ============================================================
+   区块开始：主应用容器布局
+   ============================================================ */
+.app {
+  position: relative;
+  z-index: 2;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1;
+  padding: calc(var(--topbar-height) + 12px) 16px calc(var(--nav-height) + 16px);
+  max-width: 640px;
+  margin: 0 auto;
+  width: 100%;
+  overflow-y: auto;
+}
+
+.page {
+  display: none;
+  animation: pageIn 0.35s ease;
+}
+
+.page.active {
+  display: block;
+}
+
+@keyframes pageIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+/* ============================================================
+   区块结束：主应用容器布局
+   ============================================================ */
+
+/* ============================================================
+   区块开始：顶部状态栏
+   ============================================================ */
+.top-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  height: var(--topbar-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  background: var(--bg-glass-heavy);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.top-bar-title {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.top-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  transition: background var(--transition-fast), color var(--transition-fast);position: relative;
+}
+
+.icon-btn:hover {
+  background: var(--accent-light);
+  color: var(--accent);
+}
+
+.icon-btn:active {
+  transform: scale(0.92);
+}
+
+.notif-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  background: var(--danger);
+  border-radius: 50%;
+  border: 2px solid var(--bg-glass-heavy);
+}
+/* ============================================================
+   区块结束：顶部状态栏
+   ============================================================ */
+
+/* ============================================================
+   区块开始：底部 Tab 导航
+   ============================================================ */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  height: var(--nav-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 8px;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  background: var(--bg-glass-heavy);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border-top: 1px solid var(--border-color);
+}
+
+.nav-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  color: var(--text-tertiary);
+  font-size: 11px;
+  font-weight: 500;
+  transition: color var(--transition-fast), background var(--transition-fast);-webkit-tap-highlight-color: transparent;
+}
+
+.nav-tab svg {
+  transition: transform var(--transition-fast);
+}
+
+.nav-tab.active {
+  color: var(--accent);
+}
+
+.nav-tab.active svg {
+  transform: scale(1.1);
+}
+
+.nav-tab:active svg {
+  transform: scale(0.9);
+}
+/* ============================================================
+   区块结束：底部 Tab 导航
+   ============================================================ */
+
+/* ============================================================
+   区块开始：主页- 欢迎横幅
+   ============================================================ */
+.welcome-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 20px;
+  margin-bottom: 16px;
+  overflow: hidden;
+  position: relative;
+}
+
+.welcome-banner::before {
+  content: '';
+  position: absolute;
+  top: -30px;
+  right: -30px;
+  width: 120px;
+  height: 120px;
+  background: var(--accent);
+  opacity: 0.08;
+  border-radius: 50%;
+}
+
+.welcome-greeting {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.welcome-title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+  background: linear-gradient(135deg, var(--accent), #ec4899);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.welcome-date {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.welcome-illustration {
+  flex-shrink: 0;
+}
+
+.welcome-pet-icon {
+  font-size: 48px;
+  animation: petBounce 2s ease-in-out infinite;
+}
+
+@keyframes petBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+/* ============================================================
+   区块结束：主页 - 欢迎横幅
+   ============================================================ */
+
+/* ============================================================
+   区块开始：主页 - 概览卡片网格
+   ============================================================ */
+.overview-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.overview-card {
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+}
+
+.overview-card:active {
+  transform: scale(0.97);
+}
+
+.ov-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.ov-icon {
+  font-size: 16px;
+}
+
+.ov-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.ov-value {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;margin-bottom: 4px;
+}
+
+.ov-sub {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* ============================================================
+   区块结束：主页 - 概览卡片网格
+   ============================================================ */
+
+/* ============================================================
+   区块开始：通用区块标题 & 列表
+   ============================================================ */
+.section-block {
+  margin-bottom: 20px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.section-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.text-btn {
+  font-size: 13px;
+  color: var(--accent);
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast);
+}
+
+.text-btn:hover {
+  background: var(--accent-light);
+}
+
+.danger-text {
+  color: var(--danger);
+}
+
+.danger-text:hover {
+  background: var(--danger-light);
+}
+
+.empty-hint {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--text-tertiary);
+  font-size: 14px;
+  background: var(--bg-glass-light);
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--border-color);
+}
+/* ============================================================
+   区块结束：通用区块标题 & 列表
+   ============================================================ */
+
+/* ============================================================
+   区块开始：课程卡片
+   ============================================================ */
+.course-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--bg-glass);
+  backdrop-filter: blur(var(--blur-amount));
+  -webkit-backdrop-filter: blur(var(--blur-amount));
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.course-item:hover {
+  transform: translateX(4px);
+  box-shadow: var(--shadow-md);
+}
+
+.course-item:active {
+  transform: scale(0.98);
+}
+
+.course-color-bar {
+  width: 4px;
+  height: 36px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.course-info {
+  flex: 1;min-width: 0;
+}
+
+.course-name {
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.course-meta {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.course-actions {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.course-action-btn {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  color: var(--text-tertiary);
+  transition: color var(--transition-fast), background var(--transition-fast);
+}
+
+.course-action-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-glass-light);
+}
+
+.course-action-btn.delete-btn:hover {
+  color: var(--danger);
+  background: var(--danger-light);
+}
+/* ============================================================
+   区块结束：课程卡片
+   ============================================================ */
+
+/* ============================================================
+   区块开始：纪念日卡片
+   ============================================================ */
+.anniversary-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--bg-glass);
+  backdrop-filter: blur(var(--blur-amount));
+  -webkit-backdrop-filter: blur(var(--blur-amount));
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  margin-bottom: 8px;
+  transition: transform var(--transition-fast);
+}
+
+.anniversary-item:hover {
+  transform: translateX(4px);
+}
+
+.anniversary-emoji {
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+.anniversary-info {
+  flex: 1;
+}
+
+.anniversary-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.anniversary-countdown {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.anniversary-days {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.anniversary-days-label {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+/* ============================================================
+   区块结束：纪念日卡片
+   ============================================================ */
+
+/* ============================================================
+   区块开始：日历- 工具栏
+   ============================================================ */
+.cal-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.cal-title {
+  font-size: 16px;
+  font-weight: 600;
+  min-width: 100px;
+  text-align: center;
+}
+
+.cal-view-tabs {
+  display: flex;
+  background: var(--bg-glass-light);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+  margin-left: auto;
+}
+
+.view-tab {
+  padding: 5px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+}
+
+.view-tab.active {
+  background: var(--accent);
+  color: white;
+  box-shadow: var(--shadow-sm);
+}
+
+.today-btn {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  width: 32px;
+  height: 32px;
+}
+/* ============================================================
+   区块结束：日历 - 工具栏
+   ============================================================ */
+
+/* ============================================================
+   区块开始：日历 - 月视图
+   ============================================================ */
+.cal-view.hidden {
+  display: none;
+}
+
+.cal-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  padding: 8px 0;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.cal-cell {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 4px2px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--transition-fast);position: relative;
+  font-size: 14px;
+  min-height: 44px;
+}
+
+.cal-cell:hover {
+  background: var(--bg-glass-light);
+}
+
+.cal-cell.other-month {
+  opacity: 0.3;
+}
+
+.cal-cell.today .cal-day-num {
+  background: var(--accent);
+  color: white;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+.cal-cell.selected {
+  background: var(--accent-light);
+}
+
+.cal-day-num {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.cal-cell-dots {
+  display: flex;
+  gap: 2px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.cal-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+}
+
+.cal-heart {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-size: 8px;
+  line-height: 1;
+}
+
+.cal-day-detail {
+  margin-top: 12px;
+  padding: 14px 16px;
+}
+/* ============================================================
+   区块结束：日历 - 月视图
+   ============================================================ */
+
+/* ============================================================
+   区块开始：日历 - 周视图 & 日视图
+   ============================================================ */
+.week-header, .day-header {
+  display: flex;
+  gap: 4px;
+  padding: 8px 0;
+  margin-bottom: 4px;
+}
+
+.week-header-cell {
+  flex: 1;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-secondary);
+  padding: 6px 4px;
+  border-radius: var(--radius-sm);
+}
+
+.week-header-cell.today {
+  background: var(--accent-light);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.week-body, .day-body {
+  display: flex;
+  gap: 0;
+  background: var(--bg-glass);
+  backdrop-filter: blur(var(--blur-amount));
+  -webkit-backdrop-filter: blur(var(--blur-amount));
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  min-height: 500px;
+  position: relative;
+}
+
+.week-time-col, .day-time-col {
+  width: 48px;
+  flex-shrink: 0;border-right: 1px solid var(--border-subtle);
+}
+
+.time-slot-label {
+  height: 48px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  font-size: 10px;
+  color: var(--text-tertiary);
+  padding-top: 2px;
+}
+
+.week-events-col {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  position: relative;
+}
+
+.day-events-col {
+  flex: 1;
+  position: relative;
+}
+
+.week-day-col {
+  border-right: 1px solid var(--border-subtle);
+  position: relative;
+  min-height: 100%;
+}
+
+.week-day-col:last-child {
+  border-right: none;
+}
+
+.time-grid-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--border-subtle);
+}
+
+.cal-event-block {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-size: 11px;
+  font-weight: 500;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  z-index: 2;
+  line-height: 1.3;
+}
+
+.cal-event-block:hover {
+  transform: scale(1.02);
+  box-shadow: var(--shadow-md);
+  z-index: 3;
+}
+
+.cal-event-block .event-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cal-event-block .event-time {
+  font-size: 10px;
+  opacity: 0.8;
+}
+/* ============================================================
+   区块结束：日历 - 周视图 & 日视图
+   ============================================================ */
+
+/* ============================================================
+   区块开始：弹窗系统
+   ============================================================ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: overlayIn 0.2s ease;
+}
+
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal {
+  width: 100%;
+  max-width: 420px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  animation: modalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-lg {
+  max-width: 520px;
+}
+
+.modal-sm {
+  max-width: 320px;
+}
+
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px 12px;
+}
+
+.modal-title {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.modal-close {
+  color: var(--text-tertiary);
+}
+
+.modal-body {
+  padding: 8px 20px 16px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  padding: 12px 20px 18px;
+  border-top: 1px solid var(--border-subtle);
+}
+/* ============================================================
+   区块结束：弹窗系统
+   ============================================================ */
+
+/* ============================================================
+   区块开始：表单元素
+   ============================================================ */
+.form-group {
+  margin-bottom: 14px;
+}
+
+.form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.color-picker {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.color-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  transition: border-color var(--transition-fast), transform var(--transition-fast);cursor: pointer;
+}
+
+.color-dot.active {
+  border-color: var(--text-primary);
+  transform: scale(1.15);
+}
+
+.color-dot:hover {
+  transform: scale(1.1);
+}
+
+.emoji-picker {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.emoji-btn {
+  width: 36px;
+  height: 36px;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  border: 2px solid transparent;
+  transition: all var(--transition-fast);
+}
+
+.emoji-btn.active {
+  border-color: var(--accent);
+  background: var(--accent-light);
+}
+
+.emoji-btn:hover {
+  background: var(--bg-glass-light);
+}
+/* ============================================================
+   区块结束：表单元素
+   ============================================================ */
+
+/* ============================================================
+   区块开始：按钮样式
+   ============================================================ */
+.primary-btn {
+  padding: 10px 20px;
+  background: var(--accent);
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  transition: background var(--transition-fast), transform var(--transition-fast);box-shadow: 0 2px 8px rgba(99,102,241,0.3);
+}
+
+.primary-btn:hover {
+  background: var(--accent-text);
+}
+
+.primary-btn:active {
+  transform: scale(0.97);
+}
+
+.primary-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.danger-btn {
+  background: var(--danger);
+  box-shadow: 0 2px 8px rgba(239,68,68,0.3);
+}
+
+.danger-btn:hover {
+  background: #dc2626;
+}
+
+.secondary-btn {
+  padding: 8px 16px;
+  background: var(--bg-glass-light);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border-color);
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  transition: background var(--transition-fast), transform var(--transition-fast);
+}
+
+.secondary-btn:hover {
+  background: var(--bg-glass);
+}
+
+.secondary-btn:active {
+  transform: scale(0.97);
+}
+/* ============================================================
+   区块结束：按钮样式
+   ============================================================ */
+
+/* ============================================================
+   区块开始：设置页面
+   ============================================================ */
+.settings-group {
+  margin-bottom: 14px;
+}
+
+.settings-group-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--text-primary);
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.settings-row:last-child {
+  border-bottom: none;
+}
+
+.settings-row-info {
+  flex: 1;min-width: 0;
+}
+
+.settings-row-label {
+  font-size: 14px;
+  font-weight: 500;
+  display: block;
+}
+
+.settings-row-desc {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+
+.settings-badge {
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  background: var(--bg-glass-light);
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.theme-toggle-wrap {
+  display: flex;
+  background: var(--bg-glass-light);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+}
+
+.theme-pill {
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+}
+
+.theme-pill.active {
+  background: var(--accent);
+  color: white;
+  box-shadow: var(--shadow-sm);
+}
+
+.bg-options {
+  padding: 8px 0;
+}
+
+.bg-presets {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;margin-bottom: 12px;
+}
+
+.bg-preset-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  border: 3px solid transparent;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.bg-preset-btn.active {
+  border-color: var(--accent);
+  transform: scale(1.1);
+}
+
+.bg-preset-btn:hover {
+  transform: scale(1.05);
+}
+
+.bg-url-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.bg-url-row .glass-input {
+  flex: 1;
+}
+
+.upload-btn-label {
+  display: inline-block;
+  margin-bottom: 8px;
+}
+
+.api-key-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.api-key-row .glass-input {
+  flex: 1;
+}
+
+.settings-footer {
+  text-align: center;
+  padding: 24px 08px;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  line-height: 1.8;
+}
+/* ============================================================
+   区块结束：设置页面
+   ============================================================ */
+
+/* ============================================================
+   区块开始：导入弹窗
+   ============================================================ */
+.import-hint {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+}
+
+.import-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.import-preview {
+  margin-top: 16px;
+}
+
+.import-list {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.import-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--bg-glass-light);
+  border-radius: var(--radius-sm);
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+
+.import-item-color {
+  width: 4px;
+  height: 24px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.confirm-icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+}
+
+.confirm-text {
+  font-size: 15px;
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+/* ============================================================
+   区块结束：导入弹窗
+   ============================================================ */
+
+/* ============================================================
+   区块开始：Toast 提示
+   ============================================================ */
+.toast-container {
+  position: fixed;
+  top: calc(var(--topbar-height) + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.toast {
+  padding: 10px 20px;
+  background: var(--bg-glass-heavy);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  animation: toastIn 0.3s ease, toastOut 0.3s ease 2.7s forwards;
+  pointer-events: auto;
+}
+
+.toast.success { border-left: 3px solid var(--success); }
+.toast.error { border-left: 3px solid var(--danger); }
+.toast.warning { border-left: 3px solid var(--warning); }
+.toast.info { border-left: 3px solid var(--accent); }
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes toastOut {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-10px); }
+}
+/* ============================================================
+   区块结束：Toast 提示
+   ============================================================ */
+
+/* ============================================================
+   区块开始：宠物 & 单词占位页
+   ============================================================ */
+.pet-placeholder {
+  text-align: center;
+  padding: 40px 20px;
+}
+/* ============================================================
+   区块结束：宠物 & 单词占位页
+   ============================================================ */
+
+/* ============================================================
+   区块开始：响应式适配
+   ============================================================ */
+@media (min-width: 768px) {
+  .main-content {
+    max-width: 700px;
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .overview-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .cal-cell {
+    min-height: 56px;
+  }
+}
+
+@media (max-width: 374px) {
+  .welcome-title {
+    font-size: 18px;
+  }
+
+  .ov-value {
+    font-size: 22px;
+  }
+
+  .cal-cell {
+    min-height: 38px;
+  }
+
+  .cal-day-num {
+    font-size: 12px;
+  }
+}
+/* ============================================================
+   区块结束：响应式适配
+   ============================================================ */

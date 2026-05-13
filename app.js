@@ -233,7 +233,8 @@ function applyBackground() {
 }
 
 function initBgSettings() {
-  // 预设点击$$('.bg-preset-item').forEach(item => {
+  // 预设点击
+  $$('.bg-preset-item').forEach(item => {
     item.addEventListener('click', () => {
       appData.settings.bgType = item.dataset.bg;
       appData.settings.bgCustom = '';

@@ -2801,6 +2801,39 @@ body {
 .line-through {
   text-decoration: line-through;
 }
+/* AI 类型标签 */
+.ai-type-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.ai-type-course {
+  background: rgba(99, 102, 241, 0.12);
+  color: var(--accent, #6366f1);
+}
+
+.ai-type-event {
+  background: rgba(251, 191, 36, 0.15);
+  color: #d97706;
+}
+
+/* AI 预览头部 */
+.ai-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.ai-preview-legend {
+  display: flex;
+  gap: 8px;
+}
 
 /* ============================================================
    区块结束：批量操作 & 冲突检测 & 复制课程样式

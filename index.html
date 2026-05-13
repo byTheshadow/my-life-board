@@ -444,52 +444,70 @@
 <!-- ============================================================
      区块结束：弹窗 - 冲突警告
      ============================================================ -->
-
 <!-- ============================================================
      区块开始：弹窗 - AI 导入课程
      ============================================================ -->
 <div class="modal-overlay" id="modal-ai-import">
   <div class="modal-sheet modal-sheet-tall">
     <div class="modal-handle"></div>
-    <div class="modal-title">🤖 AI 导入课程</div>
+    <div class="modal-title">🤖 AI 导入日程</div>
     <div class="ai-import-tabs">
       <button class="ai-tab active" data-aitab="paste">粘贴 JSON</button>
       <button class="ai-tab" data-aitab="ai">AI 解析</button>
     </div>
+
     <!-- 粘贴 JSON 模式 -->
     <div class="ai-tab-content active" id="aitab-paste">
       <div class="form-group">
         <label class="form-label">粘贴 JSON 数据</label>
-        <textarea class="form-input form-textarea" id="input-paste-json" placeholder='[{"title":"高等数学","date":"2025-09-01","startTime":"08:00","endTime":"09:40","location":"A301","color":"blue"}]'></textarea>
+        <textarea class="form-input form-textarea" id="input-paste-json"
+          placeholder='[{"type":"course","title":"高等数学","date":"2025-09-01","startTime":"08:00","endTime":"09:40","location":"A301","color":"blue"},{"type":"event","title":"和朋友吃饭","date":"2025-09-02","startTime":"18:00"}]'></textarea>
       </div>
       <div class="ai-tip glass">
-        <strong>💡 提示：</strong>让 DeepSeek 按以下格式输出：
-        <code>[{"title":"课程名","date":"2025-09-01","startTime":"08:00","endTime":"09:40","location":"教室","color":"blue"}]</code><br>color 可选：blue / green / purple / coral / amber</div>
+        <strong>💡 支持两种格式：</strong><br>
+        <code>type:"course"</code> 课程 — 需要 startTime + endTime<br>
+        <code>type:"event"</code> 日程事件 — startTime 可选，导入为待办<br>
+        color 可选：blue / green / purple / coral / amber
+      </div>
     </div>
+
     <!-- AI 解析模式 -->
     <div class="ai-tab-content" id="aitab-ai">
       <div class="form-group">
-        <label class="form-label">粘贴课程文本（任意格式）</label>
-        <textarea class="form-input form-textarea" id="input-ai-text" placeholder="直接粘贴你的课程安排文本，AI会自动解析..."></textarea>
+        <label class="form-label">粘贴日程文本（任意格式）</label>
+        <textarea class="form-input form-textarea" id="input-ai-text"
+          placeholder="支持课程表、日程安排、自然语言等任意格式，例如：&#10;&#10;周一 8:00-9:40 高等数学 A301&#10;周三下午3点去医院复查&#10;明天晚上7点和朋友吃饭&#10;每周五 线性代数 14:00-15:40"></textarea>
       </div>
       <div class="ai-status" id="ai-status" style="display:none">
         <div class="ai-spinner"></div>
         <span>AI 正在解析中...</span>
-      </div></div>
+      </div>
+    </div>
+
     <!-- 预览区 -->
     <div class="ai-preview" id="ai-preview" style="display:none">
-      <div class="form-label">解析结果预览</div>
+      <div class="ai-preview-header">
+        <span class="form-label">解析结果预览</span>
+        <div class="ai-preview-legend">
+          <span class="ai-type-tag ai-type-course">📚 课程</span>
+          <span class="ai-type-tag ai-type-event">📌 日程</span>
+        </div>
+      </div>
       <div class="ai-preview-list" id="ai-preview-list"></div>
-    </div><div class="modal-footer">
+    </div>
+
+    <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('modal-ai-import')">取消</button>
       <button class="btn btn-primary" id="btn-ai-parse">解析</button>
-      <button class="btn btn-primary" id="btn-ai-confirm" style="display:none">确认导入</button>
+      <button class="btn btn-primary" id="btn-ai-confirm" style="display:none">导入</button>
     </div>
   </div>
 </div>
 <!-- ============================================================
      区块结束：弹窗 - AI 导入课程
      ============================================================ -->
+
+
 
 <!-- ============================================================
      区块开始：弹窗 - 添加宠物

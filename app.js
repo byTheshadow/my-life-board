@@ -1348,7 +1348,7 @@ function executeBatchCopy(targetDates) {
 let parsedCourses = [];
 
 function initAIImport() {
-  // Tab切换
+  // Tab 切换
   $$('.ai-tab').forEach(tab => {
     tab.addEventListener('click', () => {
       $$('.ai-tab').forEach(t => t.classList.remove('active'));
@@ -1367,40 +1367,65 @@ function initAIImport() {
       await parseWithAI();
     }
   });
+
   // 确认导入
   $('btn-ai-confirm').addEventListener('click', () => {
     const toImport = parsedCourses.filter(c => !c._skip);
-    if (toImport.length === 0) { showToast('没有选中要导入的课程', 'warning'); return; }
+    if (toImport.length === 0) { showToast('没有选中要导入的内容', 'warning'); return; }
+
+    let courseCount = 0;
+    let eventCount = 0;
+
     toImport.forEach(c => {
-      appData.courses.push({
-        id: generateId(),
-        title: c.title,
-        date: c.date,
-        startTime: c.startTime,
-        endTime: c.endTime,
-        location: c.location || '',
-        color: c.color || 'blue',
-        people: c.people || [],
-        courseTodos: []
-      });
+      if (c.type === 'event') {
+        // 日程事件 → 导入为 Todo（带时间信息）
+        appData.todos.push({
+          id: generateId(),
+          text: c.startTime ? `[${c.startTime}${c.endTime ? '-' + c.endTime : ''}] ${c.title}${c.location ? ' · ' + c.location : ''}` : c.title,
+          priority: 'medium',
+          date: c.date,
+          done: false
+        });
+        eventCount++;
+      } else {
+        // 课程 → 导入为 Course
+        appData.courses.push({
+          id: generateId(),
+          title: c.title,
+          date: c.date,
+          startTime: c.startTime,
+          endTime: c.endTime || c.startTime, // 没有结束时间时用开始时间兜底
+          location: c.location || '',
+          color: c.color || 'blue',
+          people: c.people || [],
+          courseTodos: []
+        });
+        courseCount++;
+      }
     });
+
     saveData();
-    showToast(`成功导入 ${toImport.length} 节课程`);
+
+    const parts = [];
+    if (courseCount > 0) parts.push(`${courseCount} 节课程`);
+    if (eventCount > 0) parts.push(`${eventCount} 个日程`);
+    showToast(`成功导入 ${parts.join('、')}`);
+
     parsedCourses = [];
     closeModal('modal-ai-import');
     refreshCalendar();
     refreshHome();
     $('ai-preview').style.display = 'none';
-    $('btn-ai-confirm').style.display = 'none';$('btn-ai-parse').style.display = 'inline-flex';
+    $('btn-ai-confirm').style.display = 'none';
+    $('btn-ai-parse').style.display = 'inline-flex';
   });
-
+}
 
 function parsePastedJSON() {
   const raw = $('input-paste-json').value.trim();
   if (!raw) { showToast('请粘贴 JSON 数据', 'warning'); return; }
 
   try {
-    //尝试提取 JSON 数组
     let jsonStr = raw;
     const match = raw.match(/\[[\s\S]*\]/);
     if (match) jsonStr = match[0];
@@ -1408,11 +1433,15 @@ function parsePastedJSON() {
     const data = JSON.parse(jsonStr);
     if (!Array.isArray(data)) throw new Error('不是数组');
 
-    parsedCourses = data.filter(c => c.title && c.date && c.startTime && c.endTime);
-    if (parsedCourses.length === 0) throw new Error('没有有效课程');
+    // 兼容课程和日程两种格式
+    parsedCourses = data.filter(c => c.title && c.date).map(c => ({
+      ...c,
+      type: c.type || (c.startTime && c.endTime ? 'course' : 'event')
+    }));
+    if (parsedCourses.length === 0) throw new Error('没有有效数据');
 
     showPreview();
-    showToast(`解析成功，共 ${parsedCourses.length} 节课程`);
+    showToast(`解析成功，共 ${parsedCourses.length} 条`);
   } catch (e) {
     showToast('JSON 解析失败：' + e.message, 'error');
   }
@@ -1420,7 +1449,7 @@ function parsePastedJSON() {
 
 async function parseWithAI() {
   const text = $('input-ai-text').value.trim();
-  if (!text) { showToast('请粘贴课程文本', 'warning'); return; }
+  if (!text) { showToast('请粘贴日程文本', 'warning'); return; }
 
   const { apiBase, apiKey, apiModel } = appData.settings;
   if (!apiBase || !apiKey) {
@@ -1432,6 +1461,7 @@ async function parseWithAI() {
   $('btn-ai-parse').disabled = true;
 
   try {
+    const today = formatDate(new Date());
     const response = await fetch(`${apiBase.replace(/\/+$/, '')}/v1/chat/completions`, {
       method: 'POST',
       headers: {
@@ -1443,9 +1473,20 @@ async function parseWithAI() {
         messages: [
           {
             role: 'system',
-            content: `你是一个课程表解析助手。请将用户提供的课程安排文本解析为 JSON 数组格式。
-每个课程对象包含：title(课程名), date(YYYY-MM-DD), startTime(HH:MM), endTime(HH:MM), location(教室,可为空), color(blue/green/purple/coral/amber之一)。
-只输出 JSON 数组，不要有任何其他文字。`
+            content: `你是一个日程解析助手。今天的日期是 ${today}。
+请将用户提供的文本解析为 JSON 数组，同时支持两种类型：
+
+1. 课程（type: "course"）：有固定时间段的重复性课程
+   字段：title, date(YYYY-MM-DD), startTime(HH:MM), endTime(HH:MM), location(可为空), color(blue/green/purple/coral/amber), type:"course"
+
+2. 日程事件（type: "event"）：一次性的事件、约会、提醒等
+   字段：title, date(YYYY-MM-DD), startTime(HH:MM，可为空), endTime(HH:MM，可为空), location(可为空), type:"event"
+
+判断规则：
+- 含"课"、"上课"、"讲座"、"实验"等关键词，或有明确教室地点 → course
+- 其余事件（约会、会议、提醒、活动等）→ event
+- 如果文本中有相对日期（如"明天"、"下周五"），请根据今天日期 ${today} 推算出具体日期
+- 只输出 JSON 数组，不要有任何其他文字`
           },
           { role: 'user', content: text }
         ],
@@ -1463,11 +1504,23 @@ async function parseWithAI() {
     const match = content.match(/\[[\s\S]*\]/);
     if (!match) throw new Error('AI 返回内容中未找到 JSON 数组');
 
-    parsedCourses = JSON.parse(match[0]).filter(c => c.title && c.date && c.startTime && c.endTime);
-    if (parsedCourses.length === 0) throw new Error('没有解析到有效课程');
+    const parsed = JSON.parse(match[0]);
+    parsedCourses = parsed
+      .filter(c => c.title && c.date)
+      .map(c => ({
+        ...c,
+        type: c.type || (c.startTime && c.endTime ? 'course' : 'event')
+      }));
+
+    if (parsedCourses.length === 0) throw new Error('没有解析到有效内容');
 
     showPreview();
-    showToast(`AI 解析成功，共 ${parsedCourses.length} 节课程`);
+    const courseN = parsedCourses.filter(c => c.type === 'course').length;
+    const eventN = parsedCourses.filter(c => c.type === 'event').length;
+    const parts = [];
+    if (courseN > 0) parts.push(`${courseN} 节课程`);
+    if (eventN > 0) parts.push(`${eventN} 个日程`);
+    showToast(`AI 解析成功：${parts.join('、')}`);
   } catch (e) {
     showToast('AI 解析失败：' + e.message, 'error');
   } finally {
@@ -1479,22 +1532,44 @@ async function parseWithAI() {
 function showPreview() {
   const list = $('ai-preview-list');
   list.innerHTML = parsedCourses.map((c, i) => {
-    const conflicts = checkTimeConflict(c.date, c.startTime, c.endTime);
+    const isCourse = c.type === 'course';
+    const conflicts = isCourse ? checkTimeConflict(c.date, c.startTime, c.endTime) : [];
     const hasConflict = conflicts.length > 0;
+
+    const typeTag = isCourse
+      ? `<span class="ai-type-tag ai-type-course">📚 课程</span>`
+      : `<span class="ai-type-tag ai-type-event">📌 日程</span>`;
+
+    const timeStr = c.startTime
+      ? `${c.startTime}${c.endTime ? ' - ' + c.endTime : ''}`
+      : '全天';
+
     return `<div class="ai-preview-item glass ${hasConflict ? 'ai-preview-conflict' : ''}">
       <label class="batch-checkbox" style="margin-right:8px">
         <input type="checkbox" checked data-preview-index="${i}" onchange="togglePreviewItem(${i}, this.checked)">
         <span class="batch-checkmark"></span>
       </label>
-      <div class="ai-preview-color color-bg-${c.color || 'blue'}"></div>
-      <div style="flex:1">
-        <strong>${c.title}</strong> ${hasConflict ? '<span class="conflict-badge">⚠️冲突</span>' : ''}<div class="ai-preview-detail">${c.date} · ${c.startTime}-${c.endTime}${c.location ? ' · ' + c.location : ''}</div>
-        ${hasConflict ? `<div class="conflict-detail-text">与${conflicts.map(cc => cc.title).join('、')} 时间重叠</div>` : ''}
+      <div class="ai-preview-color color-bg-${c.color || (isCourse ? 'blue' : 'amber')}"></div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <strong>${c.title}</strong>
+          ${typeTag}
+          ${hasConflict ? '<span class="conflict-badge">⚠️冲突</span>' : ''}
+        </div>
+        <div class="ai-preview-detail">${c.date} · ${timeStr}${c.location ? ' · ' + c.location : ''}</div>
+        ${hasConflict ? `<div class="conflict-detail-text">与 ${conflicts.map(cc => cc.title).join('、')} 时间重叠</div>` : ''}
       </div>
     </div>`;
   }).join('');
-  $('ai-preview').style.display = 'block';$('btn-ai-confirm').style.display = 'inline-flex';
+
+  $('ai-preview').style.display = 'block';
+  $('btn-ai-confirm').style.display = 'inline-flex';
   $('btn-ai-parse').style.display = 'none';
+
+  // 更新确认按钮文案
+  const courseN = parsedCourses.filter(c => c.type === 'course' && !c._skip).length;
+  const eventN = parsedCourses.filter(c => c.type === 'event' && !c._skip).length;
+  updateConfirmBtnText();
 }
 
 function togglePreviewItem(index, checked) {
@@ -1503,12 +1578,22 @@ function togglePreviewItem(index, checked) {
   } else {
     delete parsedCourses[index]._skip;
   }
+  updateConfirmBtnText();
 }
 
+function updateConfirmBtnText() {
+  const courseN = parsedCourses.filter(c => c.type === 'course' && !c._skip).length;
+  const eventN = parsedCourses.filter(c => c.type === 'event' && !c._skip).length;
+  const parts = [];
+  if (courseN > 0) parts.push(`${courseN} 节课`);
+  if (eventN > 0) parts.push(`${eventN} 个日程`);
+  $('btn-ai-confirm').textContent = parts.length > 0 ? `导入 ${parts.join(' + ')}` : '导入';
+}
 
 /* ============================================================
    区块结束：AI 导入课程
    ============================================================ */
+
 
 /* ============================================================
    区块开始：Todo CRUD

@@ -122,8 +122,7 @@
        区块结束：首页 (Home)
        ============================================================ -->
 
-  <!-- ============================================================
-       区块开始：日历页(Calendar)
+   <!--============================================================区块开始：日历页(Calendar)
        ============================================================ -->
   <div id="page-calendar" class="page">
     <div class="page-header">
@@ -132,6 +131,7 @@
         <div class="page-header-sub" id="calendar-month-label"></div>
       </div>
       <div class="flex gap-8">
+        <button class="icon-btn" id="btn-batch-mode" title="批量操作" aria-label="批量操作">☑️</button>
         <button class="icon-btn" id="btn-cal-prev" aria-label="上一月">◀</button>
         <button class="icon-btn" id="btn-cal-today" aria-label="今天">今</button>
         <button class="icon-btn" id="btn-cal-next" aria-label="下一月">▶</button>
@@ -170,12 +170,27 @@
     <div class="day-courses-section" id="day-courses-section">
       <div class="day-courses-title">
         <span id="selected-date-label">今日课程</span>
-        <button class="btn btn-primary btn-sm" id="btn-add-course">+ 添加</button>
+        <div class="flex gap-8">
+          <button class="btn btn-primary btn-sm" id="btn-add-course">+ 添加</button>
+        </div>
       </div>
       <div class="day-courses-list" id="day-courses-list"><div class="empty-state" id="no-courses-tip">
           <span>📭</span>
           <p>这一天还没有课程</p>
         </div>
+      </div>
+    </div>
+
+    <!-- 批量操作栏 -->
+    <div class="batch-toolbar" id="batch-toolbar" style="display:none">
+      <div class="batch-toolbar-info">
+        <button class="batch-toolbar-close" id="btn-batch-cancel">✕</button>
+        <span id="batch-count">已选 0 项</span>
+      </div>
+      <div class="batch-toolbar-actions">
+        <button class="btn btn-secondary btn-sm" id="btn-batch-move">📅移动</button>
+        <button class="btn btn-secondary btn-sm" id="btn-batch-copy">📋 复制</button>
+        <button class="btn btn-secondary btn-sm batch-delete-btn" id="btn-batch-delete">🗑️ 删除</button>
       </div>
     </div>
 
@@ -187,6 +202,7 @@
   <!-- ============================================================
        区块结束：日历页 (Calendar)
        ============================================================ -->
+
 
   <!-- ============================================================
        区块开始：宠物页 (Pet)
@@ -321,11 +337,11 @@
      区块结束：底部导航栏
      ============================================================ -->
 
-<!-- ============================================================
+<!--============================================================
      区块开始：弹窗 - 添加课程
      ============================================================ -->
 <div class="modal-overlay" id="modal-add-course">
-  <div class="modal-sheet">
+  <div class="modal-sheet modal-sheet-tall">
     <div class="modal-handle"></div>
     <div class="modal-title">添加课程</div>
     <div class="form-group">
@@ -345,6 +361,14 @@
     <div class="form-group">
       <label class="form-label">地点</label>
       <input class="form-input" id="input-course-location" type="text" placeholder="例如：教学楼 A301">
+    </div>
+    <div class="form-group">
+      <label class="form-label">上课人员<span class="form-hint">（多人用逗号分隔）</span></label>
+      <input class="form-input" id="input-course-people" type="text" placeholder="例如：张三, 李四, 王五">
+    </div>
+    <div class="form-group">
+      <label class="form-label">课程待办 <span class="form-hint">（每行一条）</span></label>
+      <textarea class="form-input form-textarea-sm" id="input-course-todos" placeholder="例如：&#10;带课本&#10;交作业&#10;准备PPT"></textarea>
     </div>
     <div class="form-group">
       <label class="form-label">颜色标签</label>
@@ -375,6 +399,50 @@
 </div>
 <!-- ============================================================
      区块结束：弹窗 - 添加课程
+     ============================================================ -->
+<!-- ============================================================
+     区块开始：弹窗 - 复制/移动课程到日期
+     ============================================================ -->
+<div class="modal-overlay" id="modal-pick-date">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="pick-date-title">选择目标日期</div>
+    <div class="form-group">
+      <label class="form-label">目标日期</label>
+      <input class="form-input" id="input-pick-date" type="date">
+    </div>
+    <div class="pick-date-multi" id="pick-date-multi-section" style="display:none">
+      <label class="form-label">已选日期</label>
+      <div class="pick-date-tags" id="pick-date-tags"></div>
+      <button class="btn btn-secondary btn-sm" id="btn-pick-date-add" style="margin-top:8px">+ 添加此日期</button>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-pick-date')">取消</button>
+      <button class="btn btn-primary" id="btn-pick-date-confirm">确认</button>
+    </div>
+  </div>
+</div>
+<!-- ============================================================
+     区块结束：弹窗 - 复制/移动课程到日期
+     ============================================================ -->
+
+<!-- ============================================================
+     区块开始：弹窗 - 冲突警告
+     ============================================================ -->
+<div class="modal-overlay" id="modal-conflict">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">⚠️ 时间冲突</div>
+    <div class="conflict-desc" id="conflict-desc">以下课程存在时间冲突：</div>
+    <div class="conflict-list" id="conflict-list"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="btn-conflict-cancel">取消保存</button>
+      <button class="btn btn-primary" id="btn-conflict-force">强制保存</button>
+    </div>
+  </div>
+</div>
+<!-- ============================================================
+     区块结束：弹窗 - 冲突警告
      ============================================================ -->
 
 <!-- ============================================================

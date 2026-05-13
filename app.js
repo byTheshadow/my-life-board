@@ -475,7 +475,7 @@ function findNextAnniversary() {
    区块结束：首页逻辑
    ============================================================ */
 
-/* ============================================================
+/*============================================================
    区块开始：日历核心
    ============================================================ */
 
@@ -484,12 +484,17 @@ let calendarMonth = new Date().getMonth();
 let selectedDate = formatDate(new Date());
 let currentView = 'month';
 
+// 批量模式状态
+let batchMode = false;
+let batchSelected = new Set(); // 存储选中的课程 ID
+
 function refreshCalendar() {
   $('calendar-month-label').textContent = `${calendarYear}年${calendarMonth + 1}月`;
   if (currentView === 'month') renderMonthView();
   else if (currentView === 'week') renderWeekView();
   else renderDayView();
   renderDayCourses();
+  updateBatchCount();
 }
 
 function renderMonthView() {
@@ -704,16 +709,24 @@ function renderDayCourses() {
 
   // 课程
   courses.forEach(c => {
-    html += `<div class="course-item glass" data-id="${c.id}">
+    const peopleTag = (c.people && c.people.length > 0)
+      ? `<span class="course-people-tag">👥 ${c.people.join(', ')}</span>` : '';
+    const todoCount = (c.courseTodos && c.courseTodos.length > 0)
+      ? `<span class="course-todo-tag">📝 ${c.courseTodos.filter(t=>t.done).length}/${c.courseTodos.length}</span>` : '';
+    const conflictMark = checkSingleConflict(c) ? '<span class="conflict-badge">⚠️冲突</span>' : '';
+
+    html += `<div class="course-item glass ${batchMode ? 'batch-selectable' : ''} ${batchSelected.has(c.id) ? 'batch-selected' : ''}" data-id="${c.id}">
+      ${batchMode ? `<label class="batch-checkbox"><input type="checkbox" ${batchSelected.has(c.id) ? 'checked' : ''} onchange="toggleBatchSelect('${c.id}', this.checked)"><span class="batch-checkmark"></span></label>` : ''}
       <div class="course-item-color color-bg-${c.color || 'blue'}"></div>
-      <div class="course-item-body">
-        <div class="course-item-title">${c.title}</div>
+      <div class="course-item-body" ${!batchMode ? `onclick="showCourseDetailPanel('${c.id}')"` : ''}>
+        <div class="course-item-title">${c.title} ${conflictMark}</div>
         <div class="course-item-sub">${c.startTime} - ${c.endTime}${c.location ? ' · ' + c.location : ''}</div>
-      </div>
-      <div class="course-item-actions">
+        ${(peopleTag || todoCount) ? `<div class="course-item-tags">${peopleTag}${todoCount}</div>` : ''}
+      </div>${!batchMode ? `<div class="course-item-actions">
+        <button class="course-action-btn" onclick="copyCourse('${c.id}')" aria-label="复制" title="复制到其他日期">📋</button>
         <button class="course-action-btn" onclick="editCourse('${c.id}')" aria-label="编辑">✏️</button>
         <button class="course-action-btn" onclick="deleteCourse('${c.id}')" aria-label="删除">🗑️</button>
-      </div>
+      </div>` : ''}
     </div>`;
   });
 
@@ -732,9 +745,65 @@ function renderDayCourses() {
   list.innerHTML = html;
 }
 
-/* ============================================================
+// 展开课程详情面板（含人员+课程Todo）
+function showCourseDetailPanel(id) {
+  const course = appData.courses.find(c => c.id === id);
+  if (!course) return;
+
+  // 创建详情面板
+  const existing = document.querySelector('.course-detail-panel');
+  if (existing) existing.remove();
+
+  const panel = document.createElement('div');
+  panel.className = 'course-detail-panel glass-card';
+
+  const people = (course.people && course.people.length > 0) ? course.people.join(', ') : '未设置';
+  const todosHtml = (course.courseTodos && course.courseTodos.length > 0)
+    ? course.courseTodos.map((t, i) =>
+        `<div class="course-todo-item ${t.done ? 'done' : ''}" onclick="toggleCourseTodo('${id}', ${i})">
+          <span>${t.done ? '✅' : '⬜'}</span>
+          <span class="${t.done ? 'line-through' : ''}">${t.text}</span>
+        </div>`
+      ).join('')
+    : '<div class="text-secondary" style="font-size:13px">暂无课程待办</div>';
+
+  panel.innerHTML = `
+    <div class="detail-panel-header">
+      <div class="detail-panel-title color-${course.color || 'blue'}-text">${course.title}</div>
+      <button class="icon-btn" onclick="this.closest('.course-detail-panel').remove()">✕</button>
+    </div>
+    <div class="detail-panel-info">
+      <div class="detail-row"><span>🕐</span><span>${course.startTime} - ${course.endTime}</span></div>
+      <div class="detail-row"><span>📍</span><span>${course.location || '未设置地点'}</span></div>
+      <div class="detail-row"><span>👥</span><span>${people}</span></div></div>
+    <div class="detail-panel-section">
+      <div class="detail-section-title">📝 课程待办</div>
+      <div class="detail-todo-list">${todosHtml}</div>
+    </div>
+    <div class="detail-panel-actions">
+      <button class="btn btn-secondary btn-sm" onclick="copyCourse('${id}')">📋 复制</button>
+      <button class="btn btn-secondary btn-sm" onclick="editCourse('${id}');document.querySelector('.course-detail-panel')?.remove()">✏️ 编辑</button>
+      <button class="btn btn-secondary btn-sm" onclick="deleteCourse('${id}');document.querySelector('.course-detail-panel')?.remove()" style="color:#ef4444">🗑️ 删除</button>
+    </div>
+  `;
+
+  $('day-courses-section').appendChild(panel);
+}
+
+// 切换课程内部待办
+function toggleCourseTodo(courseId, todoIndex) {
+  const course = appData.courses.find(c => c.id === courseId);
+  if (!course || !course.courseTodos || !course.courseTodos[todoIndex]) return;
+  course.courseTodos[todoIndex].done = !course.courseTodos[todoIndex].done;
+  saveData();
+  showCourseDetailPanel(courseId);
+  refreshCalendar();
+}
+
+/*============================================================
    区块结束：日历核心
    ============================================================ */
+
 
 /* ============================================================
    区块开始：日历视图切换 & 导航
@@ -830,6 +899,58 @@ function initCalendar() {
 
 let editingCourseId = null;
 
+//----冲突检测 ----
+function checkTimeConflict(date, startTime, endTime, excludeId = null) {
+  const courses = getCoursesForDate(date);
+  const conflicts = [];
+  const [s1h, s1m] = startTime.split(':').map(Number);
+  const [e1h, e1m] = endTime.split(':').map(Number);
+  const start1 = s1h * 60 + s1m;
+  const end1 = e1h * 60 + e1m;
+
+  courses.forEach(c => {
+    if (c.id === excludeId) return;
+    const [s2h, s2m] = c.startTime.split(':').map(Number);
+    const [e2h, e2m] = c.endTime.split(':').map(Number);
+    const start2 = s2h * 60 + s2m;
+    const end2 = e2h * 60 + e2m;
+
+    // 时间段重叠判断
+    if (start1 < end2 && end1 > start2) {
+      conflicts.push(c);
+    }
+  });
+  return conflicts;
+}
+
+//检查单个课程是否与同日其他课程冲突
+function checkSingleConflict(course) {
+  return checkTimeConflict(course.date, course.startTime, course.endTime, course.id).length > 0;
+}
+
+// 冲突回调
+let conflictResolveCallback = null;
+
+function showConflictWarning(newCourse, conflicts, onForce) {
+  const list = $('conflict-list');
+  list.innerHTML = `
+    <div class="conflict-new-course glass">
+      <strong>新课程：</strong>${newCourse.title} ${newCourse.startTime}-${newCourse.endTime}</div>
+    <div class="conflict-separator">与以下课程冲突：</div>
+    ${conflicts.map(c => `
+      <div class="conflict-item glass">
+        <div class="conflict-item-color color-bg-${c.color || 'blue'}"></div>
+        <div>
+          <strong>${c.title}</strong>
+          <div class="text-secondary">${c.startTime} - ${c.endTime}${c.location ? ' · ' + c.location : ''}</div>
+        </div>
+      </div>
+    `).join('')}
+  `;
+  conflictResolveCallback = onForce;
+  openModal('modal-conflict');
+}
+
 function saveCourse() {
   const title = $('input-course-title').value.trim();
   const startTime = $('input-course-start').value;
@@ -839,46 +960,76 @@ function saveCourse() {
   const repeat = $('input-course-repeat').value;
   const repeatWeeks = parseInt($('input-repeat-weeks').value) || 16;
 
+  // 人员
+  const peopleRaw = $('input-course-people').value.trim();
+  const people = peopleRaw ? peopleRaw.split(/[,，]/).map(p => p.trim()).filter(Boolean) : [];
+
+  // 课程待办
+  const todosRaw = $('input-course-todos').value.trim();
+  const courseTodos = todosRaw
+    ? todosRaw.split('\n').map(t => t.trim()).filter(Boolean).map(text => ({ text, done: false }))
+    : [];
+
   if (!title) { showToast('请输入课程名称', 'warning'); return; }
   if (!startTime || !endTime) { showToast('请设置时间', 'warning'); return; }
   if (startTime >= endTime) { showToast('结束时间必须晚于开始时间', 'warning'); return; }
 
-  if (editingCourseId) {
-    // 编辑模式
-    const idx = appData.courses.findIndex(c => c.id === editingCourseId);
-    if (idx !== -1) {
-      appData.courses[idx] = { ...appData.courses[idx], title, startTime, endTime, location, color };}
-    editingCourseId = null;
-    showToast('课程已更新');
-  } else {
-    // 新增
-    const dates = [selectedDate];
-    if (repeat !== 'none') {
-      const step = repeat === 'biweekly' ? 14 : 7;
-      const base = new Date(selectedDate);
-      for (let w = 1; w < repeatWeeks; w++) {
-        const next = new Date(base);
-        next.setDate(next.getDate() + step * w);
-        dates.push(formatDate(next));
+  const doSave = () => {
+    if (editingCourseId) {
+      // 编辑模式
+      const idx = appData.courses.findIndex(c => c.id === editingCourseId);
+      if (idx !== -1) {
+        appData.courses[idx] = {
+          ...appData.courses[idx],
+          title, startTime, endTime, location, color, people, courseTodos
+        };}
+      editingCourseId = null;
+      showToast('课程已更新');
+    } else {
+      // 新增
+      const dates = [selectedDate];
+      if (repeat !== 'none') {
+        const step = repeat === 'biweekly' ? 14 : 7;
+        const base = new Date(selectedDate);
+        for (let w = 1; w < repeatWeeks; w++) {
+          const next = new Date(base);
+          next.setDate(next.getDate() + step * w);
+          dates.push(formatDate(next));
+        }
       }
+
+      const repeatGroupId = dates.length > 1 ? generateId() : null;
+      dates.forEach(date => {
+        appData.courses.push({
+          id: generateId(),
+          title, date, startTime, endTime, location, color,
+          people: [...people],
+          courseTodos: courseTodos.map(t => ({ ...t })),
+          repeatGroup: repeatGroupId
+        });
+      });
+
+      showToast(`已添加 ${dates.length} 节课程`);
     }
 
-    dates.forEach(date => {
-      appData.courses.push({
-        id: generateId(),
-        title, date, startTime, endTime, location, color,
-        repeatGroup: dates.length > 1 ? generateId() : null
-      });
-    });
+    saveData();
+    closeModal('modal-add-course');
+    resetCourseForm();
+    refreshCalendar();
+    refreshHome();
+  };
 
-    showToast(`已添加 ${dates.length} 节课程`);
+  // 冲突检测
+  const targetDate = editingCourseId
+    ? appData.courses.find(c => c.id === editingCourseId)?.date || selectedDate
+    : selectedDate;
+  const conflicts = checkTimeConflict(targetDate, startTime, endTime, editingCourseId);
+
+  if (conflicts.length > 0) {
+    showConflictWarning({ title, startTime, endTime }, conflicts, doSave);
+  } else {
+    doSave();
   }
-
-  saveData();
-  closeModal('modal-add-course');
-  resetCourseForm();
-  refreshCalendar();
-  refreshHome();
 }
 
 function editCourse(id) {
@@ -889,7 +1040,8 @@ function editCourse(id) {
   $('input-course-start').value = course.startTime;
   $('input-course-end').value = course.endTime;
   $('input-course-location').value = course.location || '';
-  $$('.color-dot').forEach(d => d.classList.toggle('active', d.dataset.color === course.color));
+  $('input-course-people').value = (course.people || []).join(', ');
+  $('input-course-todos').value = (course.courseTodos || []).map(t => t.text).join('\n');$$('.color-dot').forEach(d => d.classList.toggle('active', d.dataset.color === course.color));
   $('input-course-repeat').value = 'none';
   $('repeat-weeks-group').style.display = 'none';
   openModal('modal-add-course');
@@ -905,8 +1057,7 @@ function deleteCourse(id) {
 }
 
 function showCourseDetail(course) {
-  // 简单弹出编辑
-  editCourse(course.id);
+  showCourseDetailPanel(course.id);
 }
 
 function resetCourseForm() {
@@ -914,6 +1065,8 @@ function resetCourseForm() {
   $('input-course-start').value = '08:00';
   $('input-course-end').value = '09:40';
   $('input-course-location').value = '';
+  $('input-course-people').value = '';
+  $('input-course-todos').value = '';
   $('input-course-repeat').value = 'none';
   $('repeat-weeks-group').style.display = 'none';
   $$('.color-dot').forEach(d => d.classList.remove('active'));
@@ -921,9 +1074,272 @@ function resetCourseForm() {
   editingCourseId = null;
 }
 
+// ---- 复制课程 ----
+let copyingCourseId = null;
+let pickDateMode = null; // 'copy' | 'move' | 'batch-move' | 'batch-copy'
+let pickDateTargets = [];
+
+function copyCourse(id) {
+  copyingCourseId = id;
+  pickDateMode = 'copy';
+  pickDateTargets = [];
+  $('pick-date-title').textContent = '📋 复制课程到...';
+  $('input-pick-date').value = '';
+  $('pick-date-tags').innerHTML = '';
+  $('pick-date-multi-section').style.display = 'block';
+  openModal('modal-pick-date');
+}
+
+function initPickDateModal() {
+  // 添加日期按钮
+  $('btn-pick-date-add').addEventListener('click', () => {
+    const date = $('input-pick-date').value;
+    if (!date) { showToast('请选择日期', 'warning'); return; }
+    if (pickDateTargets.includes(date)) { showToast('该日期已添加', 'info'); return; }
+    pickDateTargets.push(date);
+    renderPickDateTags();
+    $('input-pick-date').value = '';});
+
+  // 确认按钮
+  $('btn-pick-date-confirm').addEventListener('click', () => {
+    // 如果没有通过多选添加，取单个日期
+    if (pickDateTargets.length === 0) {
+      const date = $('input-pick-date').value;
+      if (!date) { showToast('请选择目标日期', 'warning'); return; }
+      pickDateTargets = [date];
+    }
+
+    if (pickDateMode === 'copy' && copyingCourseId) {
+      executeCopyCourse(copyingCourseId, pickDateTargets);
+    } else if (pickDateMode === 'batch-move') {
+      executeBatchMove(pickDateTargets[0]);
+    } else if (pickDateMode === 'batch-copy') {
+      executeBatchCopy(pickDateTargets);
+    }
+
+    closeModal('modal-pick-date');
+    pickDateTargets = [];
+  });
+
+  // 冲突弹窗按钮
+  $('btn-conflict-cancel').addEventListener('click', () => {
+    conflictResolveCallback = null;
+    closeModal('modal-conflict');
+  });
+
+  $('btn-conflict-force').addEventListener('click', () => {
+    if (conflictResolveCallback) {
+      conflictResolveCallback();
+      conflictResolveCallback = null;
+    }
+    closeModal('modal-conflict');
+  });
+}
+
+function renderPickDateTags() {
+  const container = $('pick-date-tags');
+  container.innerHTML = pickDateTargets.map((d, i) => {
+    const dd = new Date(d);
+    return `<span class="pick-date-tag">${dd.getMonth()+1}/${dd.getDate()} <button onclick="removePickDate(${i})">✕</button></span>`;
+  }).join('');
+}
+
+function removePickDate(index) {
+  pickDateTargets.splice(index, 1);
+  renderPickDateTags();
+}
+
+function executeCopyCourse(courseId, targetDates) {
+  const source = appData.courses.find(c => c.id === courseId);
+  if (!source) return;
+
+  let conflictDates = [];
+  targetDates.forEach(date => {
+    const conflicts = checkTimeConflict(date, source.startTime, source.endTime);
+    if (conflicts.length > 0) conflictDates.push(date);
+  });
+
+  const doCopy = () => {
+    targetDates.forEach(date => {
+      appData.courses.push({
+        id: generateId(),
+        title: source.title,
+        date: date,
+        startTime: source.startTime,
+        endTime: source.endTime,
+        location: source.location,
+        color: source.color,
+        people: [...(source.people || [])],
+        courseTodos: (source.courseTodos || []).map(t => ({ text: t.text, done: false })),
+        repeatGroup: null
+      });
+    });
+    saveData();
+    refreshCalendar();
+    refreshHome();
+    showToast(`已复制到 ${targetDates.length} 个日期`);
+  };
+
+  if (conflictDates.length > 0) {
+    showConflictWarning(
+      { title: source.title, startTime: source.startTime, endTime: source.endTime },
+      conflictDates.flatMap(d => checkTimeConflict(d, source.startTime, source.endTime)),
+      doCopy
+    );
+  } else {
+    doCopy();
+  }
+}
+
 /* ============================================================
    区块结束：课程 CRUD
    ============================================================ */
+/* ============================================================
+   区块开始：批量操作系统
+   ============================================================ */
+
+function initBatchOps() {
+  $('btn-batch-mode').addEventListener('click', () => {
+    batchMode = !batchMode;
+    batchSelected.clear();
+    $('btn-batch-mode').classList.toggle('active', batchMode);
+    $('batch-toolbar').style.display = batchMode ? 'flex' : 'none';
+    refreshCalendar();
+  });
+
+  $('btn-batch-cancel').addEventListener('click', exitBatchMode);
+
+  $('btn-batch-delete').addEventListener('click', () => {
+    if (batchSelected.size === 0) { showToast('请先选择课程', 'warning'); return; }
+    if (!confirm(`确定删除选中的 ${batchSelected.size} 节课程？`)) return;
+    appData.courses = appData.courses.filter(c => !batchSelected.has(c.id));
+    saveData();
+    showToast(`已删除 ${batchSelected.size} 节课程`);
+    exitBatchMode();
+    refreshCalendar();
+    refreshHome();
+  });
+
+  $('btn-batch-move').addEventListener('click', () => {
+    if (batchSelected.size === 0) { showToast('请先选择课程', 'warning'); return; }
+    pickDateMode = 'batch-move';
+    pickDateTargets = [];
+    $('pick-date-title').textContent = `📅 移动 ${batchSelected.size} 节课程到...`;
+    $('input-pick-date').value = '';
+    $('pick-date-tags').innerHTML = '';
+    $('pick-date-multi-section').style.display = 'none';
+    openModal('modal-pick-date');
+  });
+
+  $('btn-batch-copy').addEventListener('click', () => {
+    if (batchSelected.size === 0) { showToast('请先选择课程', 'warning'); return; }
+    pickDateMode = 'batch-copy';
+    pickDateTargets = [];
+    $('pick-date-title').textContent = `📋 复制 ${batchSelected.size} 节课程到...`;
+    $('input-pick-date').value = '';
+    $('pick-date-tags').innerHTML = '';
+    $('pick-date-multi-section').style.display = 'block';
+    openModal('modal-pick-date');
+  });
+}
+
+function toggleBatchSelect(id, checked) {
+  if (checked) {
+    batchSelected.add(id);
+  } else {
+    batchSelected.delete(id);
+  }updateBatchCount();
+}
+
+function updateBatchCount() {
+  if (!batchMode) return;
+  $('batch-count').textContent = `已选 ${batchSelected.size} 项`;
+}
+
+function exitBatchMode() {
+  batchMode = false;
+  batchSelected.clear();
+  $('btn-batch-mode').classList.remove('active');
+  $('batch-toolbar').style.display = 'none';
+  refreshCalendar();
+}
+
+function executeBatchMove(targetDate) {
+  if (!targetDate || batchSelected.size === 0) return;
+
+  // 检测冲突
+  let allConflicts = [];
+  batchSelected.forEach(id => {
+    const course = appData.courses.find(c => c.id === id);
+    if (course) {
+      const conflicts = checkTimeConflict(targetDate, course.startTime, course.endTime);
+      allConflicts.push(...conflicts.filter(c => !batchSelected.has(c.id)));
+    }
+  });
+
+  const doMove = () => {
+    batchSelected.forEach(id => {
+      const course = appData.courses.find(c => c.id === id);
+      if (course) course.date = targetDate;
+    });
+    saveData();
+    showToast(`已移动 ${batchSelected.size} 节课程`);
+    exitBatchMode();
+    refreshCalendar();
+    refreshHome();
+  };
+
+  // 去重冲突
+  const uniqueConflicts = [...new Map(allConflicts.map(c => [c.id, c])).values()];
+  if (uniqueConflicts.length > 0) {
+    showConflictWarning(
+      { title: `${batchSelected.size} 节课程`, startTime: '多个时段', endTime: '' },
+      uniqueConflicts,
+      doMove
+    );
+  } else {
+    doMove();
+  }
+}
+
+function executeBatchCopy(targetDates) {
+  if (targetDates.length === 0 || batchSelected.size === 0) return;
+
+  const doCopy = () => {
+    let count = 0;
+    batchSelected.forEach(id => {
+      const source = appData.courses.find(c => c.id === id);
+      if (!source) return;
+      targetDates.forEach(date => {
+        appData.courses.push({
+          id: generateId(),
+          title: source.title,
+          date: date,
+          startTime: source.startTime,
+          endTime: source.endTime,
+          location: source.location,
+          color: source.color,
+          people: [...(source.people || [])],
+          courseTodos: (source.courseTodos || []).map(t => ({ text: t.text, done: false })),
+          repeatGroup: null
+        });
+        count++;
+      });
+    });
+    saveData();
+    showToast(`已复制 ${count} 节课程`);
+    exitBatchMode();
+    refreshCalendar();
+    refreshHome();
+  };
+
+  doCopy();
+}
+
+/* ============================================================
+   区块结束：批量操作系统
+   ============================================================ */
+
 
 /* ============================================================
    区块开始：AI 导入课程
@@ -951,11 +1367,11 @@ function initAIImport() {
       await parseWithAI();
     }
   });
-
   // 确认导入
   $('btn-ai-confirm').addEventListener('click', () => {
-    if (parsedCourses.length === 0) return;
-    parsedCourses.forEach(c => {
+    const toImport = parsedCourses.filter(c => !c._skip);
+    if (toImport.length === 0) { showToast('没有选中要导入的课程', 'warning'); return; }
+    toImport.forEach(c => {
       appData.courses.push({
         id: generateId(),
         title: c.title,
@@ -963,11 +1379,13 @@ function initAIImport() {
         startTime: c.startTime,
         endTime: c.endTime,
         location: c.location || '',
-        color: c.color || 'blue'
+        color: c.color || 'blue',
+        people: c.people || [],
+        courseTodos: []
       });
     });
     saveData();
-    showToast(`成功导入 ${parsedCourses.length} 节课程`);
+    showToast(`成功导入 ${toImport.length} 节课程`);
     parsedCourses = [];
     closeModal('modal-ai-import');
     refreshCalendar();
@@ -975,7 +1393,7 @@ function initAIImport() {
     $('ai-preview').style.display = 'none';
     $('btn-ai-confirm').style.display = 'none';$('btn-ai-parse').style.display = 'inline-flex';
   });
-}
+
 
 function parsePastedJSON() {
   const raw = $('input-paste-json').value.trim();
@@ -1060,19 +1478,33 @@ async function parseWithAI() {
 
 function showPreview() {
   const list = $('ai-preview-list');
-  list.innerHTML = parsedCourses.map(c =>
-    `<div class="ai-preview-item glass">
+  list.innerHTML = parsedCourses.map((c, i) => {
+    const conflicts = checkTimeConflict(c.date, c.startTime, c.endTime);
+    const hasConflict = conflicts.length > 0;
+    return `<div class="ai-preview-item glass ${hasConflict ? 'ai-preview-conflict' : ''}">
+      <label class="batch-checkbox" style="margin-right:8px">
+        <input type="checkbox" checked data-preview-index="${i}" onchange="togglePreviewItem(${i}, this.checked)">
+        <span class="batch-checkmark"></span>
+      </label>
       <div class="ai-preview-color color-bg-${c.color || 'blue'}"></div>
-      <div>
-        <strong>${c.title}</strong>
-        <div class="ai-preview-detail">${c.date} · ${c.startTime}-${c.endTime}${c.location ? ' · ' + c.location : ''}</div>
+      <div style="flex:1">
+        <strong>${c.title}</strong> ${hasConflict ? '<span class="conflict-badge">⚠️冲突</span>' : ''}<div class="ai-preview-detail">${c.date} · ${c.startTime}-${c.endTime}${c.location ? ' · ' + c.location : ''}</div>
+        ${hasConflict ? `<div class="conflict-detail-text">与${conflicts.map(cc => cc.title).join('、')} 时间重叠</div>` : ''}
       </div>
-    </div>`
-  ).join('');
-  $('ai-preview').style.display = 'block';
-  $('btn-ai-confirm').style.display = 'inline-flex';
+    </div>`;
+  }).join('');
+  $('ai-preview').style.display = 'block';$('btn-ai-confirm').style.display = 'inline-flex';
   $('btn-ai-parse').style.display = 'none';
 }
+
+function togglePreviewItem(index, checked) {
+  if (!checked) {
+    parsedCourses[index]._skip = true;
+  } else {
+    delete parsedCourses[index]._skip;
+  }
+}
+
 
 /* ============================================================
    区块结束：AI 导入课程
@@ -2057,6 +2489,9 @@ function init() {
   initBgSettings();
   initNotifications();
   initServiceWorker();
+  initBatchOps();
+  initPickDateModal();
+
 
   // 主题切换按钮
   $('btn-theme').addEventListener('click', toggleTheme);

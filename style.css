@@ -299,7 +299,15 @@ body {
 /* 顶部欢迎区 */
 .home-header {
   padding: 52px 24px 24px;
-  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.home-header-text {
+  flex: 1;
+  min-width: 0;
 }
 
 .home-greeting {
@@ -331,11 +339,10 @@ body {
 
 /* 主题 & 背景按钮组 */
 .home-actions {
-  position: absolute;
-  top: 52px;
-  right: 24px;
   display: flex;
   gap: 8px;
+  flex-shrink: 0;
+  padding-top: 2px;
 }
 
 .icon-btn {
@@ -397,7 +404,6 @@ body {
   overflow: hidden;
 }
 
-/* 三张卡片的层叠位置 */
 .stack-card:nth-child(3) {
   top: 20px;
   transform: scale(0.93) rotate(2.5deg);
@@ -429,7 +435,6 @@ body {
   transform: scale(1.01) translateY(-3px);
 }
 
-/* 卡片内容 */
 .stack-card-label {
   font-size: 10px;
   font-weight: 600;
@@ -591,9 +596,9 @@ body {
   transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.pet-stat-fill.hunger  { background: linear-gradient(90deg, #f97316, #fb923c); }
-.pet-stat-fill.happy   { background: linear-gradient(90deg, #a855f7, #c084fc); }
-.pet-stat-fill.clean   { background: linear-gradient(90deg, #06b6d4, #67e8f9); }
+.pet-stat-fill.hunger { background: linear-gradient(90deg, #f97316, #fb923c); }
+.pet-stat-fill.happy  { background: linear-gradient(90deg, #a855f7, #c084fc); }
+.pet-stat-fill.clean  { background: linear-gradient(90deg, #06b6d4, #67e8f9); }
 
 .pet-stat-val {
   font-size: 11px;
@@ -606,6 +611,7 @@ body {
 /* ============================================================
    区块结束：主界面 (Home Page)
    ============================================================ */
+
 
 /* ============================================================
    区块开始：通用页面头部

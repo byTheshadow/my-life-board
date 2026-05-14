@@ -687,7 +687,7 @@ function renderDayCourses() {
   const annivs = getAnniversariesForDate(selectedDate);
 
   const d = new Date(selectedDate);
-  $('selected-date-label').textContent = `${d.getMonth() + 1}月${d.getDate()}日`;
+  $('selected-date-label').textContent = (d.getMonth() + 1) + '月' + d.getDate() + '日';
 
   if (courses.length === 0 && todos.length === 0 && annivs.length === 0) {
     list.innerHTML = '<div class="empty-state"><span>📭</span><p>这一天还没有安排</p></div>';
@@ -695,6 +695,69 @@ function renderDayCourses() {
   }
 
   let html = '';
+
+  // 纪念日
+  annivs.forEach(function(a) {
+    html += '<div class="course-item anniv-item glass">'
+      + '<div class="course-item-color" style="background:linear-gradient(135deg,#f472b6,#ec4899)"></div>'
+      + '<div class="course-item-body">'
+      +   '<div class="course-item-title">💖 ' + a.name + '</div>'
+      +   '<div class="course-item-sub">纪念日</div>'
+      + '</div>'
+      + '</div>';
+  });
+
+  // 待办
+  todos.forEach(function(t) {
+    const priorityColors = { high: '#ef4444', medium: '#f59e0b', low: '#22c55e' };
+    const priorityLabel  = { high: '高', medium: '中', low: '低' };
+    const isEvent = /^\[[\d:]+/.test(t.text);
+    const subText = isEvent ? '日程事件' : ('优先级：' + (priorityLabel[t.priority] || '中'));
+    const checkIcon = t.done
+      ? '<svg viewBox="0 0 12 12" fill="none" width="12" height="12"><polyline points="2,6 5,9 10,3" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+      : '';
+
+    html += '<div class="course-item todo-item glass ' + (t.done ? 'done' : '') + '" data-id="' + t.id + '">'
+      + '<div class="course-item-color" style="background:' + (priorityColors[t.priority] || '#f59e0b') + '"></div>'
+      + '<label class="todo-check-label" onclick="toggleTodo(\'' + t.id + '\')">'
+      +   '<span class="todo-checkbox ' + (t.done ? 'checked' : '') + '" aria-hidden="true">' + checkIcon + '</span>'
+      + '</label>'
+      + '<div class="course-item-body" onclick="toggleTodo(\'' + t.id + '\')" style="cursor:pointer">'
+      +   '<div class="course-item-title ' + (t.done ? 'line-through' : '') + '">' + t.text + '</div>'
+      +   '<div class="course-item-sub">' + subText + '</div>'
+      + '</div>'
+      + '<button class="course-action-btn" onclick="deleteTodo(\'' + t.id + '\')" aria-label="删除">🗑️</button>'
+      + '</div>';
+  });
+
+  // 课程
+  courses.forEach(function(c) {
+    const colorMap = {
+      blue:   '#3b82f6',
+      green:  '#22c55e',
+      purple: '#a855f7',
+      coral:  '#f97316',
+      amber:  '#f59e0b'
+    };
+    const color = colorMap[c.color] || colorMap.blue;
+    const batchCheckbox = batchMode
+      ? '<input type="checkbox" class="batch-checkbox" ' + (batchSelected.has(c.id) ? 'checked' : '') + ' onclick="toggleBatchSelect(\'' + c.id + '\', event)">'
+      : '';
+
+    html += '<div class="course-item glass ' + (batchMode ? 'batch-mode' : '') + '" data-id="' + c.id + '">'
+      + '<div class="course-item-color" style="background:' + color + '"></div>'
+      + batchCheckbox
+      + '<div class="course-item-body" onclick="' + (batchMode ? 'toggleBatchSelect(\'' + c.id + '\')' : 'openEditCourseModal(\'' + c.id + '\')') + '">'
+      +   '<div class="course-item-title">' + c.title + '</div>'
+      +   '<div class="course-item-sub">' + c.startTime + ' – ' + c.endTime + (c.location ? ' · ' + c.location : '') + '</div>'
+      + '</div>'
+      + (!batchMode ? '<button class="course-action-btn" onclick="openEditCourseModal(\'' + c.id + '\')" aria-label="编辑">✏️</button>' : '')
+      + '</div>';
+  });
+
+  list.innerHTML = html;
+}
+
 
   // 纪念日
   annivs.forEach(a => {

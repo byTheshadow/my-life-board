@@ -1986,7 +1986,7 @@ async function sendTamaChat() {
         model:       apiModel || 'gpt-3.5-turbo',
         messages:    [{ role: 'system', content: systemPrompt }, { role: 'user', content: userText }],
         temperature: 0.9,
-        max_tokens:  120
+        max_tokens:  12800
       })
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);

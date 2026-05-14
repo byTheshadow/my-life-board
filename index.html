@@ -576,30 +576,100 @@
 <!-- ============================================================
      区块结束：弹窗 - 编辑宠物
      ============================================================ -->
-
-
-
-  <!-- ============================================================
-       区块开始：背单词页 (Vocab)
-       ============================================================ -->
-  <div id="page-vocab" class="page">
-    <div class="page-header">
-      <div>
-        <div class="page-header-title">背单词</div>
-        <div class="page-header-sub">艾宾浩斯记忆法</div>
+     
+<!-- 添加单词弹窗 -->
+<div class="modal-overlay" id="modal-add-word" role="dialog" aria-modal="true">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">添加单词</div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">单词 *</label>
+        <input class="form-input" id="input-word" placeholder="e.g. ephemeral" autocomplete="off" />
       </div>
+      <div class="form-group">
+        <label class="form-label">释义 *</label>
+        <input class="form-input" id="input-word-meaning" placeholder="e.g. 短暂的，瞬息的" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">例句（可选）</label>
+        <textarea class="form-input form-textarea" id="input-word-example" placeholder="e.g. Fame is ephemeral."></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('modal-add-word')">取消</button>
+        <button class="btn btn-primary" id="btn-save-word">保存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 批量导入弹窗 -->
+<div class="modal-overlay" id="modal-import-word" role="dialog" aria-modal="true">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">批量导入单词</div>
+    <div class="modal-body">
+      <div class="vocab-import-format glass-card">
+        <div class="vocab-import-format-title">📋 格式说明</div>
+        <div class="vocab-import-format-desc">每行一个单词，字段用 <code>|</code> 分隔：</div>
+        <code class="vocab-import-example">单词 | 释义 | 例句（可选）</code>
+        <div class="vocab-import-format-desc" style="margin-top:8px">示例：</div>
+        <code class="vocab-import-example">ephemeral | 短暂的，瞬息的 | Fame is ephemeral.
+resilient | 有弹性的，快速恢复的
+ambiguous | 模糊的，有歧义的 | The message was ambiguous.</code>
+      </div>
+      <div class="form-group" style="margin-top:16px">
+        <label class="form-label">粘贴内容</label>
+        <textarea class="form-input form-textarea" id="input-import-words"
+          placeholder="ephemeral | 短暂的 | Fame is ephemeral.&#10;resilient | 有弹性的"
+          style="min-height:160px;font-family:monospace;font-size:13px"></textarea>
+      </div>
+      <div id="import-preview" style="display:none">
+        <div class="vocab-import-preview-title">预览 <span id="import-count"></span></div>
+        <div id="import-preview-list" class="vocab-import-preview-list"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('modal-import-word')">取消</button>
+        <button class="btn btn-secondary" id="btn-preview-import">预览</button>
+        <button class="btn btn-primary" id="btn-confirm-import" style="display:none">确认导入</button>
+      </div>
+    </div>
+  </div>
+</div>
+ <!-- ============================================================
+     弹窗
+     ============================================================ -->
+
+
+
+ <!-- ============================================================
+     区块开始：背单词页 (Vocab)
+     ============================================================ -->
+<div id="page-vocab" class="page">
+  <div class="page-header">
+    <div>
+      <div class="page-header-title">背单词</div>
+      <div class="page-header-sub">艾宾浩斯记忆法</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="icon-btn" id="btn-import-word" aria-label="批量导入">📥</button>
       <button class="icon-btn" id="btn-add-word" aria-label="添加单词">➕</button>
     </div>
-    <div class="placeholder-page" id="vocab-placeholder">
-      <span class="placeholder-icon">📖</span>
-      <p>还没有添加单词</p>
+  </div>
+  <div class="placeholder-page" id="vocab-placeholder">
+    <span class="placeholder-icon">📖</span>
+    <p>还没有添加单词</p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
+      <button class="btn btn-secondary" onclick="openModal('modal-import-word')">📥 批量导入</button>
       <button class="btn btn-primary" onclick="openModal('modal-add-word')">添加第一个单词</button>
     </div>
-    <div id="vocab-content" style="display:none"></div>
   </div>
-  <!-- ============================================================
-       区块结束：背单词页 (Vocab)
-       ============================================================ -->
+  <div id="vocab-content" style="display:none"></div>
+</div>
+<!-- ============================================================
+     区块结束：背单词页 (Vocab)
+     ============================================================ -->
+
 
   <!-- ============================================================
        区块开始：统计页 (Stats)

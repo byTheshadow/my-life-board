@@ -2608,113 +2608,441 @@ function animateTama(type) {
    区块结束：宠物管理
    ============================================================ */
 
-
-
 /* ============================================================
    区块开始：背单词系统
    ============================================================ */
 
-const EBBINGHAUS_INTERVALS = [1, 2, 4, 7, 15, 30]; // 天
+const EBBINGHAUS_INTERVALS = [1, 2, 4, 7, 15, 30]; // 天，level 0-5 对应下次复习间隔
 
+// 复习队列状态（页面内存，不持久化）
+let vocabReviewQueue = [];
+let vocabReviewIndex = 0;
+let vocabReviewFlipped = false;
+
+// ── 工具：XSS 防护 ──
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// ── 工具：根据 level 获取颜色 ──
+function getVocabLevelColor(level) {
+  if (level >= EBBINGHAUS_INTERVALS.length) return '#34d399';
+  if (level >= 3) return '#fbbf24';
+  return '#f87171';
+}
+
+// ── 工具：根据 level 获取徽章 ──
+function getVocabBadge(level) {
+  if (level >= EBBINGHAUS_INTERVALS.length) return { cls: 'badge-mastered',  text: '已掌握' };
+  if (level > 0)                            return { cls: 'badge-reviewing', text: `Lv.${level}` };
+  return                                           { cls: 'badge-learning',  text: '待学习' };
+}
+
+// ── 计算今日到期单词 ──
+function getDueWords() {
+  const todayStr = formatDate(new Date());
+  return appData.vocab.filter(w => {
+    if (w.level >= EBBINGHAUS_INTERVALS.length) return false;
+    if (!w.lastReview) return true;
+    const next = new Date(w.lastReview);
+    next.setDate(next.getDate() + EBBINGHAUS_INTERVALS[w.level]);
+    return formatDate(next) <= todayStr;
+  });
+}
+
+// ── 主渲染入口 ──
 function refreshVocab() {
   if (appData.vocab.length === 0) {
     $('vocab-placeholder').style.display = 'flex';
     $('vocab-content').style.display = 'none';
     return;
   }
-
   $('vocab-placeholder').style.display = 'none';
   $('vocab-content').style.display = 'block';
 
-  const todayStr = formatDate(new Date());
-  const dueWords = appData.vocab.filter(w => {
-    if (w.level >= EBBINGHAUS_INTERVALS.length) return false;
-    if (!w.lastReview) return true;
-    const nextDate = new Date(w.lastReview);
-    nextDate.setDate(nextDate.getDate() + EBBINGHAUS_INTERVALS[w.level]);
-    return formatDate(nextDate) <= todayStr;
-  });
-
-  const mastered = appData.vocab.filter(w => w.level >= EBBINGHAUS_INTERVALS.length).length;
-  const reviewing = appData.vocab.filter(w => w.level >0 && w.level < EBBINGHAUS_INTERVALS.length).length;
-  const newWords = appData.vocab.filter(w => w.level === 0).length;
-
   const content = $('vocab-content');
-  content.innerHTML = `
-    <div style="padding:0 24px">
-      <!-- 进度条 -->
-      <div class="vocab-progress glass-card" style="padding:18px 20px;margin-bottom:16px">
-        <div class="vocab-progress-header">
-          <span>学习进度</span>
-          <span class="text-accent font-bold">${mastered}/${appData.vocab.length}</span>
-        </div>
-        <div class="vocab-progress-bar">
-          <div class="vocab-bar-fill mastered" style="width:${(mastered / appData.vocab.length * 100)}%"></div>
-          <div class="vocab-bar-fill reviewing" style="width:${(reviewing / appData.vocab.length * 100)}%"></div></div>
-        <div class="vocab-progress-legend">
-          <span><i style="background:#34d399"></i>已掌握 ${mastered}</span>
-          <span><i style="background:#fbbf24"></i>复习中 ${reviewing}</span>
-          <span><i style="background:#94a3b8"></i>待学习 ${newWords}</span>
-        </div>
-        <div class="vocab-streak">🔥 连续打卡 ${appData.vocabStats.streak} 天</div>
-      </div>
+  content.innerHTML = `<div class="vocab-wrap">
+    ${renderVocabStats()}
+    ${renderVocabReview()}
+    ${renderVocabLibrary()}
+  </div>`;
 
-      <!-- 今日复习 -->
-      ${dueWords.length > 0 ? `
-        <div class="section-title">📝 今日复习 (${dueWords.length})</div>
-        <div class="vocab-review-card glass-card" id="vocab-review-card" style="padding:24px;margin-bottom:16px;text-align:center">
-          <div class="vocab-word" id="vocab-current-word">${dueWords[0].word}</div>
-          <div class="vocab-meaning hidden" id="vocab-current-meaning">${dueWords[0].meaning}</div>
-          ${dueWords[0].example ? `<div class="vocab-example hidden" id="vocab-current-example">${dueWords[0].example}</div>` : ''}
-          <div class="vocab-review-actions" id="vocab-review-actions">
-            <button class="btn btn-secondary" id="btn-show-meaning">显示释义</button>
-          </div>
-          <div class="vocab-review-actions hidden" id="vocab-grade-actions">
-            <button class="btn btn-secondary" onclick="gradeWord('${dueWords[0].id}', false)">😕 不认识</button>
-            <button class="btn btn-primary" onclick="gradeWord('${dueWords[0].id}', true)">😊 认识</button>
-          </div>
-        </div>
-      ` : '<div class="empty-state glass-card" style="padding:32px;text-align:center"><span style="font-size:32px">🎉</span><p>今日复习已完成！</p></div>'}
-
-      <!-- 词库列表 -->
-      <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
-        <span>📚 词库 (${appData.vocab.length})</span>
-        <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-word')">+ 添加</button>
-      </div>
-      <div class="vocab-list">
-        ${appData.vocab.map(w => `
-          <div class="vocab-item glass">
-            <div class="vocab-item-body">
-              <div class="vocab-item-word">${w.word}</div>
-              <div class="vocab-item-meaning">${w.meaning}</div></div>
-            <div class="vocab-item-level">Lv.${w.level}</div>
-            <button class="course-action-btn" onclick="deleteWord('${w.id}')" aria-label="删除">🗑️</button>
-          </div>
-        `).join('')}
-      </div>
-    </div>
-  `;
-
-  //绑定显示释义按钮
-  const showBtn = document.getElementById('btn-show-meaning');
-  if (showBtn) {
-    showBtn.addEventListener('click', () => {
-      document.getElementById('vocab-current-meaning')?.classList.remove('hidden');
-      document.getElementById('vocab-current-example')?.classList.remove('hidden');
-      document.getElementById('vocab-review-actions')?.classList.add('hidden');
-      document.getElementById('vocab-grade-actions')?.classList.remove('hidden');
-    });
-  }
+  bindVocabEvents();
 }
 
-function initVocab() {
-  $('btn-add-word').addEventListener('click', () => openModal('modal-add-word'));
+// ── 统计卡 ──
+function renderVocabStats() {
+  const total     = appData.vocab.length;
+  const mastered  = appData.vocab.filter(w => w.level >= EBBINGHAUS_INTERVALS.length).length;
+  const reviewing = appData.vocab.filter(w => w.level > 0 && w.level < EBBINGHAUS_INTERVALS.length).length;
+  const learning  = total - mastered - reviewing;
+  const streak    = appData.vocabStats?.streak || 0;
 
+  const pMastered  = total ? (mastered  / total * 100).toFixed(1) : 0;
+  const pReviewing = total ? (reviewing / total * 100).toFixed(1) : 0;
+  const pLearning  = total ? (learning  / total * 100).toFixed(1) : 0;
+
+  return `
+  <div class="glass-card vocab-stats-card">
+    <div class="vocab-stats-row">
+      <span class="vocab-stats-title">学习进度 · ${mastered}/${total} 已掌握</span>
+      <span class="vocab-streak-badge">🔥 ${streak} 天</span>
+    </div>
+    <div class="vocab-bar-track">
+      <div class="vocab-bar-seg mastered"  style="width:${pMastered}%"></div>
+      <div class="vocab-bar-seg reviewing" style="width:${pReviewing}%"></div>
+      <div class="vocab-bar-seg learning"  style="width:${pLearning}%"></div>
+    </div>
+    <div class="vocab-stats-legend">
+      <span><i style="background:#34d399"></i>已掌握 ${mastered}</span>
+      <span><i style="background:#fbbf24"></i>复习中 ${reviewing}</span>
+      <span><i style="background:#94a3b8"></i>待学习 ${learning}</span>
+    </div>
+  </div>`;
+}
+
+// ── 今日复习区 ──
+function renderVocabReview() {
+  const due = getDueWords();
+
+  // 今日全部完成（队列为空）
+  if (due.length === 0 && vocabReviewQueue.length === 0) {
+    return `
+    <div class="glass-card vocab-done-card">
+      <div class="vocab-done-icon">🎉</div>
+      <div class="vocab-done-title">今日复习已完成！</div>
+      <div class="vocab-done-sub">词库共 ${appData.vocab.length} 个单词，继续保持～</div>
+    </div>`;
+  }
+
+  // 初始化队列（首次进入或队列已清空）
+  if (vocabReviewQueue.length === 0) {
+    vocabReviewQueue = [...due];
+    vocabReviewIndex = 0;
+    vocabReviewFlipped = false;
+  }
+
+  // 本轮已全部评分完毕
+  if (vocabReviewIndex >= vocabReviewQueue.length) {
+    return `
+    <div class="glass-card vocab-done-card">
+      <div class="vocab-done-icon">✅</div>
+      <div class="vocab-done-title">本轮复习完成！</div>
+      <div class="vocab-done-sub">共复习了 ${vocabReviewQueue.length} 个单词</div>
+      <button class="btn btn-secondary btn-sm" style="margin-top:8px" onclick="resetVocabReview()">再来一轮</button>
+    </div>`;
+  }
+
+  const w = vocabReviewQueue[vocabReviewIndex];
+  const levelColor = getVocabLevelColor(w.level);
+  const total   = vocabReviewQueue.length;
+  const current = vocabReviewIndex + 1;
+  // 进度百分比（已完成的张数）
+  const progress = ((current - 1) / total * 100).toFixed(0);
+
+  return `
+  <div>
+    <div class="vocab-review-header">
+      <span class="vocab-review-title">📝 今日复习</span>
+      <span class="vocab-review-counter">${current} / ${total}</span>
+    </div>
+
+    <!-- 进度细条 -->
+    <div style="height:3px;background:var(--border-color);border-radius:99px;margin-bottom:14px;overflow:hidden">
+      <div style="height:100%;width:${progress}%;background:var(--accent);border-radius:99px;transition:width 0.4s ease"></div>
+    </div>
+
+    <!-- 3D 翻转卡片 -->
+    <div class="vocab-flip-scene" id="vocab-flip-scene"
+         onclick="flipVocabCard()"
+         onkeydown="if(event.key==='Enter'||event.key===' ')flipVocabCard()"
+         role="button" aria-label="点击翻转查看释义" tabindex="0">
+      <div class="vocab-flip-card ${vocabReviewFlipped ? 'flipped' : ''}" id="vocab-flip-card">
+
+        <!-- 正面：单词 -->
+        <div class="vocab-flip-front">
+          <div class="vocab-flip-level-dot" style="background:${levelColor}"></div>
+          <div class="vocab-flip-hint">点击翻转查看释义</div>
+          <div class="vocab-flip-word">${escapeHtml(w.word)}</div>
+          ${w.phonetic ? `<div class="vocab-flip-phonetic">${escapeHtml(w.phonetic)}</div>` : ''}
+        </div>
+
+        <!-- 背面：释义 + 例句 -->
+        <div class="vocab-flip-back">
+          <div class="vocab-flip-level-dot" style="background:${levelColor}"></div>
+          <div class="vocab-flip-hint">你记住了吗？</div>
+          <div class="vocab-flip-meaning">${escapeHtml(w.meaning)}</div>
+          ${w.example
+            ? `<div class="vocab-flip-example">"${escapeHtml(w.example)}"</div>`
+            : ''}
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 评分按钮（翻转后才显示） -->
+    <div class="vocab-grade-btns ${vocabReviewFlipped ? '' : 'hidden'}" id="vocab-grade-btns">
+      <button class="vocab-grade-btn grade-hard"
+              onclick="gradeWord('${w.id}', 'hard')" aria-label="不认识">
+        <span class="grade-emoji">😕</span>不认识
+      </button>
+      <button class="vocab-grade-btn grade-ok"
+              onclick="gradeWord('${w.id}', 'ok')" aria-label="模糊">
+        <span class="grade-emoji">🤔</span>有点模糊
+      </button>
+      <button class="vocab-grade-btn grade-easy"
+              onclick="gradeWord('${w.id}', 'easy')" aria-label="认识">
+        <span class="grade-emoji">😊</span>认识
+      </button>
+    </div>
+  </div>`;
+}
+
+// ── 词库列表 ──
+function renderVocabLibrary(filter = 'all', query = '') {
+  const total = appData.vocab.length;
+
+  // 过滤
+  let list = appData.vocab.filter(w => {
+    if (filter === 'mastered')  return w.level >= EBBINGHAUS_INTERVALS.length;
+    if (filter === 'reviewing') return w.level > 0 && w.level < EBBINGHAUS_INTERVALS.length;
+    if (filter === 'learning')  return w.level === 0;
+    return true;
+  });
+
+  if (query.trim()) {
+    const q = query.trim().toLowerCase();
+    list = list.filter(w =>
+      w.word.toLowerCase().includes(q) ||
+      w.meaning.toLowerCase().includes(q)
+    );
+  }
+
+  const tabs = [
+    { key: 'all',       label: `全部 ${total}` },
+    { key: 'learning',  label: `待学习 ${appData.vocab.filter(w => w.level === 0).length}` },
+    { key: 'reviewing', label: `复习中 ${appData.vocab.filter(w => w.level > 0 && w.level < EBBINGHAUS_INTERVALS.length).length}` },
+    { key: 'mastered',  label: `已掌握 ${appData.vocab.filter(w => w.level >= EBBINGHAUS_INTERVALS.length).length}` },
+  ];
+
+  return `
+  <div>
+    <div class="vocab-library-header">
+      <span class="vocab-library-title">📚 词库</span>
+      <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-word')">+ 添加</button>
+    </div>
+
+    <!-- 搜索框 -->
+    <div class="vocab-search-wrap">
+      <span class="vocab-search-icon">🔍</span>
+      <input class="vocab-search-input" id="vocab-search-input"
+             placeholder="搜索单词或释义…"
+             value="${escapeHtml(query)}"
+             oninput="onVocabSearch(this.value)"
+             autocomplete="off" />
+    </div>
+
+    <!-- 分组 Tab -->
+    <div class="vocab-filter-tabs" id="vocab-filter-tabs">
+      ${tabs.map(t => `
+        <button class="vocab-filter-tab ${filter === t.key ? 'active' : ''}"
+                data-filter="${t.key}"
+                onclick="onVocabFilter('${t.key}')">
+          ${t.label}
+        </button>`).join('')}
+    </div>
+
+    <!-- 列表 -->
+    <div id="vocab-list-container">
+      ${list.length === 0
+        ? `<div class="vocab-empty-search">
+             ${query ? `🔍 没有找到"${escapeHtml(query)}"` : '这个分类暂无单词'}
+           </div>`
+        : list.map(w => {
+            const badge = getVocabBadge(w.level);
+            const dot   = getVocabLevelColor(w.level);
+            return `
+            <div class="vocab-item glass">
+              <div class="vocab-level-dot" style="background:${dot}"></div>
+              <div class="vocab-item-body">
+                <div class="vocab-item-word">${escapeHtml(w.word)}</div>
+                <div class="vocab-item-meaning">${escapeHtml(w.meaning)}</div>
+              </div>
+              <span class="vocab-item-badge ${badge.cls}">${badge.text}</span>
+              <button class="vocab-item-del" onclick="deleteWord('${w.id}')" aria-label="删除单词">🗑️</button>
+            </div>`;
+          }).join('')
+      }
+    </div>
+  </div>`;
+}
+
+// ── 绑定事件（innerHTML 后调用）──
+function bindVocabEvents() {
+  // 搜索和过滤状态存在闭包变量里，通过全局函数更新
+  window._vocabFilter = window._vocabFilter || 'all';
+  window._vocabQuery  = window._vocabQuery  || '';
+}
+
+// ── 搜索回调 ──
+function onVocabSearch(query) {
+  window._vocabQuery = query;
+  const container = document.getElementById('vocab-list-container');
+  if (!container) return;
+  // 只重渲染列表部分，不动复习卡片
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = renderVocabLibrary(window._vocabFilter || 'all', query);
+  const newContainer = tempDiv.querySelector('#vocab-list-container');
+  if (newContainer) container.innerHTML = newContainer.innerHTML;
+  // 更新 tab 计数
+  const tabsEl = document.getElementById('vocab-filter-tabs');
+  const newTabs = tempDiv.querySelector('#vocab-filter-tabs');
+  if (tabsEl && newTabs) tabsEl.innerHTML = newTabs.innerHTML;
+}
+
+// ── 过滤 Tab 回调 ──
+function onVocabFilter(filter) {
+  window._vocabFilter = filter;
+  const query = window._vocabQuery || '';
+  const container = document.getElementById('vocab-list-container');
+  if (!container) return;
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = renderVocabLibrary(filter, query);
+  const newContainer = tempDiv.querySelector('#vocab-list-container');
+  if (newContainer) container.innerHTML = newContainer.innerHTML;
+  // 更新 tab active 状态
+  document.querySelectorAll('.vocab-filter-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.filter === filter);
+  });
+}
+
+// ── 翻转卡片 ──
+function flipVocabCard() {
+  if (vocabReviewFlipped) return; // 已翻转，不重复翻
+  vocabReviewFlipped = true;
+  const card = document.getElementById('vocab-flip-card');
+  const btns = document.getElementById('vocab-grade-btns');
+  if (card) card.classList.add('flipped');
+  if (btns) btns.classList.remove('hidden');
+}
+
+// ── 重置本轮复习 ──
+function resetVocabReview() {
+  vocabReviewQueue = [];
+  vocabReviewIndex = 0;
+  vocabReviewFlipped = false;
+  refreshVocab();
+}
+
+// ── 评分（三档）──
+function gradeWord(id, grade) {
+  const word = appData.vocab.find(w => w.id === id);
+  if (!word) return;
+
+  if (grade === 'easy') {
+    // 认识：level +1，最高到 EBBINGHAUS_INTERVALS.length（已掌握）
+    word.level = Math.min(word.level + 1, EBBINGHAUS_INTERVALS.length);
+  } else if (grade === 'ok') {
+    // 模糊：level 不变，但刷新 lastReview（按当前间隔重新计时）
+    // level 不变
+  } else {
+    // 不认识：level 归零
+    word.level = 0;
+  }
+  word.lastReview = formatDate(new Date());
+
+  // 更新连续打卡
+  const todayStr = formatDate(new Date());
+  if (!appData.vocabStats) appData.vocabStats = { streak: 0, lastDate: null };
+  if (appData.vocabStats.lastDate !== todayStr) {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (appData.vocabStats.lastDate === formatDate(yesterday)) {
+      appData.vocabStats.streak++;
+    } else {
+      appData.vocabStats.streak = 1;
+    }
+    appData.vocabStats.lastDate = todayStr;
+  }
+
+  saveData();
+
+  // 推进队列，局部更新复习区（不重渲染整页）
+  vocabReviewIndex++;
+  vocabReviewFlipped = false;
+
+  const toastMap = {
+    easy: '太棒了！✨',
+    ok:   '继续加油！💪',
+    hard: '没关系，下次再来！🔄'
+  };
+  showToast(toastMap[grade], grade === 'easy' ? 'success' : 'info');
+
+  // 局部刷新：只更新统计卡 + 复习区，保留词库搜索状态
+  refreshVocabPartial();
+}
+
+// ── 局部刷新（保留词库搜索/过滤状态）──
+function refreshVocabPartial() {
+  const wrap = document.querySelector('.vocab-wrap');
+  if (!wrap) { refreshVocab(); return; }
+
+  // 更新统计卡
+  const statsEl = wrap.children[0];
+  if (statsEl) statsEl.outerHTML = renderVocabStats();
+
+  // 更新复习区
+  const reviewEl = wrap.children[1];
+  if (reviewEl) reviewEl.outerHTML = renderVocabReview();
+
+  // 统计卡已被替换，重新绑定（无需额外绑定，事件都是 inline onclick）
+  refreshHome(); // 同步首页概览
+}
+
+// ── 删除单词 ──
+function deleteWord(id) {
+  if (!confirm('确定删除这个单词？')) return;
+  appData.vocab = appData.vocab.filter(w => w.id !== id);
+  // 如果删的是当前复习队列里的词，从队列中移除
+  const qIdx = vocabReviewQueue.findIndex(w => w.id === id);
+  if (qIdx !== -1) {
+    vocabReviewQueue.splice(qIdx, 1);
+    if (vocabReviewIndex > qIdx) vocabReviewIndex--;
+    if (vocabReviewIndex >= vocabReviewQueue.length) vocabReviewIndex = vocabReviewQueue.length;
+  }
+  saveData();
+  refreshVocab();
+  showToast('单词已删除');
+}
+
+// ── 初始化 ──
+function initVocab() {
+  // 重置队列状态（切换页面时重置）
+  vocabReviewQueue = [];
+  vocabReviewIndex = 0;
+  vocabReviewFlipped = false;
+  window._vocabFilter = 'all';
+  window._vocabQuery  = '';
+
+  $('btn-add-word').addEventListener('click', () => openModal('modal-add-word'));
+  $('btn-import-word').addEventListener('click', () => openModal('modal-import-word'));
+
+  // 保存单词
   $('btn-save-word').addEventListener('click', () => {
-    const word = $('input-word').value.trim();
+    const word    = $('input-word').value.trim();
     const meaning = $('input-word-meaning').value.trim();
     const example = $('input-word-example').value.trim();
     if (!word || !meaning) { showToast('请填写单词和释义', 'warning'); return; }
+
+    // 检查重复
+    if (appData.vocab.some(w => w.word.toLowerCase() === word.toLowerCase())) {
+      showToast('该单词已存在', 'warning'); return;
+    }
 
     appData.vocab.push({
       id: generateId(),
@@ -2730,51 +3058,107 @@ function initVocab() {
     $('input-word-example').value = '';
     refreshVocab();
     refreshHome();
-    showToast('单词已添加');
+    showToast('单词已添加 ✅');
+  });
+
+  // 批量导入：预览
+  $('btn-preview-import').addEventListener('click', () => {
+    const raw = $('input-import-words').value.trim();
+    if (!raw) { showToast('请先粘贴内容', 'warning'); return; }
+
+    const parsed = parseImportText(raw);
+    renderImportPreview(parsed);
+  });
+
+  // 批量导入：确认
+  $('btn-confirm-import').addEventListener('click', () => {
+    const raw = $('input-import-words').value.trim();
+    if (!raw) return;
+    const parsed = parseImportText(raw);
+    const valid  = parsed.filter(p => !p.error);
+    if (valid.length === 0) { showToast('没有可导入的有效单词', 'warning'); return; }
+
+    let added = 0, skipped = 0;
+    valid.forEach(p => {
+      if (appData.vocab.some(w => w.word.toLowerCase() === p.word.toLowerCase())) {
+        skipped++; return;
+      }
+      appData.vocab.push({
+        id: generateId(),
+        word: p.word, meaning: p.meaning, example: p.example || '',
+        level: 0, lastReview: null,
+        addedDate: formatDate(new Date())
+      });
+      added++;
+    });
+
+    saveData();
+    closeModal('modal-import-word');
+    // 重置弹窗状态
+    $('input-import-words').value = '';
+    $('import-preview').style.display = 'none';
+    $('btn-confirm-import').style.display = 'none';
+
+    refreshVocab();
+    refreshHome();
+    showToast(`成功导入 ${added} 个单词${skipped ? `，跳过重复 ${skipped} 个` : ''} ✅`);
   });
 }
 
-function gradeWord(id, known) {
-  const word = appData.vocab.find(w => w.id === id);
-  if (!word) return;
-
-  if (known) {
-    word.level = Math.min(word.level + 1, EBBINGHAUS_INTERVALS.length);
-  } else {
-    word.level = 0;
-  }
-  word.lastReview = formatDate(new Date());
-
-  // 更新打卡
-  const todayStr = formatDate(new Date());
-  if (appData.vocabStats.lastDate !== todayStr) {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    if (appData.vocabStats.lastDate === formatDate(yesterday)) {
-      appData.vocabStats.streak++;
-    } else {
-      appData.vocabStats.streak = 1;
-    }
-    appData.vocabStats.lastDate = todayStr;
-  }
-
-  saveData();
-  refreshVocab();
-  refreshHome();
-  showToast(known ? '太棒了！✨' : '没关系，继续加油！💪');
+// ── 解析导入文本 ──
+function parseImportText(raw) {
+  return raw.split('\n')
+    .map(line => line.trim())
+    .filter(line => line.length > 0)
+    .map(line => {
+      const parts = line.split('|').map(s => s.trim());
+      if (parts.length < 2 || !parts[0] || !parts[1]) {
+        return { raw: line, error: '格式错误，需要至少：单词 | 释义' };
+      }
+      return {
+        word:    parts[0],
+        meaning: parts[1],
+        example: parts[2] || '',
+        raw:     line
+      };
+    });
 }
 
-function deleteWord(id) {
-  if (!confirm('确定删除这个单词？')) return;
-  appData.vocab = appData.vocab.filter(w => w.id !== id);
-  saveData();
-  refreshVocab();
-  showToast('单词已删除');
+// ── 渲染导入预览 ──
+function renderImportPreview(parsed) {
+  const previewEl = $('import-preview');
+  const listEl    = $('import-preview-list');
+  const countEl   = $('import-count');
+  const confirmBtn= $('btn-confirm-import');
+
+  const valid   = parsed.filter(p => !p.error);
+  const invalid = parsed.filter(p =>  p.error);
+
+  countEl.textContent = `共 ${parsed.length} 行，有效 ${valid.length} 个，错误 ${invalid.length} 个`;
+
+  listEl.innerHTML = parsed.map(p => {
+    if (p.error) {
+      return `<div class="vocab-import-preview-item error">
+        <span class="vocab-import-preview-word">⚠️</span>
+        <span class="vocab-import-preview-meaning">${escapeHtml(p.raw)}</span>
+        <span class="vocab-import-preview-err">${p.error}</span>
+      </div>`;
+    }
+    const dup = appData.vocab.some(w => w.word.toLowerCase() === p.word.toLowerCase());
+    return `<div class="vocab-import-preview-item ${dup ? 'error' : ''}">
+      <span class="vocab-import-preview-word">${escapeHtml(p.word)}</span>
+      <span class="vocab-import-preview-meaning">${escapeHtml(p.meaning)}${p.example ? ` · <em>${escapeHtml(p.example)}</em>` : ''}${dup ? ' <span style="color:#f87171">（重复）</span>' : ''}</span>
+    </div>`;
+  }).join('');
+
+  previewEl.style.display = 'block';
+  confirmBtn.style.display = valid.length > 0 ? 'inline-flex' : 'none';
 }
 
 /* ============================================================
    区块结束：背单词系统
    ============================================================ */
+
 
 /* ============================================================
    区块开始：统计页面

@@ -2734,11 +2734,13 @@ function renderVocabReview() {
 }
 
 // ── 词库列表 ──
-function renderVocabLibrary(filter = 'all', query = '') {
+function renderVocabLibrary(filter, query) {
+  filter = filter || 'all';
+  query  = query  || '';
   const total = appData.vocab.length;
 
   // 过滤
-  let list = appData.vocab.filter(w => {
+  let list = appData.vocab.filter(function(w) {
     if (filter === 'mastered')  return w.level >= EBBINGHAUS_INTERVALS.length;
     if (filter === 'reviewing') return w.level > 0 && w.level < EBBINGHAUS_INTERVALS.length;
     if (filter === 'learning')  return w.level === 0;
@@ -2747,70 +2749,64 @@ function renderVocabLibrary(filter = 'all', query = '') {
 
   if (query.trim()) {
     const q = query.trim().toLowerCase();
-    list = list.filter(w =>
-      w.word.toLowerCase().includes(q) ||
-      w.meaning.toLowerCase().includes(q)
-    );
+    list = list.filter(function(w) {
+      return w.word.toLowerCase().includes(q) || w.meaning.toLowerCase().includes(q);
+    });
   }
 
+  const cntAll       = total;
+  const cntLearning  = appData.vocab.filter(function(w){ return w.level === 0; }).length;
+  const cntReviewing = appData.vocab.filter(function(w){ return w.level > 0 && w.level < EBBINGHAUS_INTERVALS.length; }).length;
+  const cntMastered  = appData.vocab.filter(function(w){ return w.level >= EBBINGHAUS_INTERVALS.length; }).length;
+
   const tabs = [
-    { key: 'all',       label: `全部 ${total}` },
-    { key: 'learning',  label: `待学习 ${appData.vocab.filter(w => w.level === 0).length}` },
-    { key: 'reviewing', label: `复习中 ${appData.vocab.filter(w => w.level > 0 && w.level < EBBINGHAUS_INTERVALS.length).length}` },
-    { key: 'mastered',  label: `已掌握 ${appData.vocab.filter(w => w.level >= EBBINGHAUS_INTERVALS.length).length}` },
+    { key: 'all',       label: '全部 '   + cntAll },
+    { key: 'learning',  label: '待学习 ' + cntLearning },
+    { key: 'reviewing', label: '复习中 ' + cntReviewing },
+    { key: 'mastered',  label: '已掌握 ' + cntMastered },
   ];
 
-  return `
-  <div>
-    <div class="vocab-library-header">
-      <span class="vocab-library-title">📚 词库</span>
-      <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-word')">+ 添加</button>
-    </div>
+  // 构建 tab HTML（避免嵌套模板字符串）
+  const tabsHtml = tabs.map(function(t) {
+    const activeClass = filter === t.key ? ' active' : '';
+    return '<button class="vocab-filter-tab' + activeClass + '" data-filter="' + t.key + '" onclick="onVocabFilter(\'' + t.key + '\')">' + t.label + '</button>';
+  }).join('');
 
-    <!-- 搜索框 -->
-    <div class="vocab-search-wrap">
-      <span class="vocab-search-icon">🔍</span>
-      <input class="vocab-search-input" id="vocab-search-input"
-             placeholder="搜索单词或释义…"
-             value="${escapeHtml(query)}"
-             oninput="onVocabSearch(this.value)"
-             autocomplete="off" />
-    </div>
+  // 构建列表 HTML
+  let listHtml;
+  if (list.length === 0) {
+    const emptyMsg = query ? ('🔍 没有找到"' + escapeHtml(query) + '"') : '这个分类暂无单词';
+    listHtml = '<div class="vocab-empty-search">' + emptyMsg + '</div>';
+  } else {
+    listHtml = list.map(function(w) {
+      const badge = getVocabBadge(w.level);
+      const dot   = getVocabLevelColor(w.level);
+      return '<div class="vocab-item glass">'
+        + '<div class="vocab-level-dot" style="background:' + dot + '"></div>'
+        + '<div class="vocab-item-body">'
+        +   '<div class="vocab-item-word">'    + escapeHtml(w.word)    + '</div>'
+        +   '<div class="vocab-item-meaning">' + escapeHtml(w.meaning) + '</div>'
+        + '</div>'
+        + '<span class="vocab-item-badge ' + badge.cls + '">' + badge.text + '</span>'
+        + '<button class="vocab-item-del" onclick="deleteWord(\'' + w.id + '\')" aria-label="删除单词">🗑️</button>'
+        + '</div>';
+    }).join('');
+  }
 
-    <!-- 分组 Tab -->
-    <div class="vocab-filter-tabs" id="vocab-filter-tabs">
-      ${tabs.map(t => `
-        <button class="vocab-filter-tab ${filter === t.key ? 'active' : ''}"
-                data-filter="${t.key}"
-                onclick="onVocabFilter('${t.key}')">
-          ${t.label}
-        </button>`).join('')}
-    </div>
-
-    <!-- 列表 -->
-    <div id="vocab-list-container">
-      ${list.length === 0
-        ? `<div class="vocab-empty-search">
-             ${query ? `🔍 没有找到"${escapeHtml(query)}"` : '这个分类暂无单词'}
-           </div>`
-        : list.map(w => {
-            const badge = getVocabBadge(w.level);
-            const dot   = getVocabLevelColor(w.level);
-            return `
-            <div class="vocab-item glass">
-              <div class="vocab-level-dot" style="background:${dot}"></div>
-              <div class="vocab-item-body">
-                <div class="vocab-item-word">${escapeHtml(w.word)}</div>
-                <div class="vocab-item-meaning">${escapeHtml(w.meaning)}</div>
-              </div>
-              <span class="vocab-item-badge ${badge.cls}">${badge.text}</span>
-              <button class="vocab-item-del" onclick="deleteWord('${w.id}')" aria-label="删除单词">🗑️</button>
-            </div>`;
-          }).join('')
-      }
-    </div>
-  </div>`;
+  return '<div>'
+    + '<div class="vocab-library-header">'
+    +   '<span class="vocab-library-title">📚 词库</span>'
+    +   '<button class="btn btn-primary btn-sm" onclick="openModal(\'modal-add-word\')">+ 添加</button>'
+    + '</div>'
+    + '<div class="vocab-search-wrap">'
+    +   '<span class="vocab-search-icon">🔍</span>'
+    +   '<input class="vocab-search-input" id="vocab-search-input" placeholder="搜索单词或释义…" value="' + escapeHtml(query) + '" oninput="onVocabSearch(this.value)" autocomplete="off" />'
+    + '</div>'
+    + '<div class="vocab-filter-tabs" id="vocab-filter-tabs">' + tabsHtml + '</div>'
+    + '<div id="vocab-list-container">' + listHtml + '</div>'
+    + '</div>';
 }
+
 
 // ── 绑定事件（innerHTML 后调用）──
 function bindVocabEvents() {
@@ -3571,4 +3567,4 @@ document.addEventListener('DOMContentLoaded', init);
 
 /* ============================================================
    区块结束：应用初始化
-   ============================================================ */}
+   ============================================================ */

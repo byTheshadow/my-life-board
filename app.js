@@ -758,41 +758,6 @@ function renderDayCourses() {
   list.innerHTML = html;
 }
 
-
-  // 纪念日
-  annivs.forEach(a => {
-    html += `<div class="course-item anniv-item glass">
-      <div class="course-item-color" style="background:linear-gradient(135deg,#f472b6,#ec4899)"></div>
-      <div class="course-item-body">
-        <div class="course-item-title">💖 ${a.name}</div>
-        <div class="course-item-sub">纪念日</div>
-      </div>
-    </div>`;
-  });
-
-    // 待办
-  todos.forEach(t => {
-    const priorityColors = { high: '#ef4444', medium: '#f59e0b', low: '#22c55e' };
-    const priorityLabel  = { high: '高', medium: '中', low: '低' };
-    const isEvent = /^\[[\d:]+/.test(t.text);
-    const subText = isEvent ? '日程事件' : ('优先级：' + (priorityLabel[t.priority] || '中'));
-    const checkIcon = t.done
-      ? '<svg viewBox="0 0 12 12" fill="none" width="12" height="12"><polyline points="2,6 5,9 10,3" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
-      : '';
-
-    html += '<div class="course-item todo-item glass ' + (t.done ? 'done' : '') + '" data-id="' + t.id + '">'
-          +   '<div class="course-item-color" style="background:' + (priorityColors[t.priority] || '#f59e0b') + '"></div>'
-          +   '<label class="todo-check-label" onclick="toggleTodo(\'' + t.id + '\')">'
-          +     '<span class="todo-checkbox ' + (t.done ? 'checked' : '') + '" aria-hidden="true">' + checkIcon + '</span>'
-          +   '</label>'
-          +   '<div class="course-item-body" onclick="toggleTodo(\'' + t.id + '\')" style="cursor:pointer">'
-          +     '<div class="course-item-title ' + (t.done ? 'line-through' : '') + '">' + t.text + '</div>'
-          +     '<div class="course-item-sub">' + subText + '</div>'
-          +   '</div>'
-          +   '<button class="course-action-btn" onclick="deleteTodo(\'' + t.id + '\')" aria-label="删除">🗑️</button>'
-          + '</div>';
-  });
-
 /*============================================================
    区块结束：日历核心
    ============================================================ */

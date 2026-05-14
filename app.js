@@ -1333,7 +1333,7 @@ function initAIImport() {
   });
 
 
-  // 确认导入
+    // 确认导入
   $('btn-ai-confirm').addEventListener('click', () => {
     const toImport = parsedCourses.filter(c => !c._skip);
     if (toImport.length === 0) { showToast('没有选中要导入的内容', 'warning'); return; }
@@ -1343,7 +1343,6 @@ function initAIImport() {
 
     toImport.forEach(c => {
       if (c.type === 'event') {
-        // 日程事件 → 导入为 Todo（带时间信息）
         appData.todos.push({
           id: generateId(),
           text: c.startTime ? `[${c.startTime}${c.endTime ? '-' + c.endTime : ''}] ${c.title}${c.location ? ' · ' + c.location : ''}` : c.title,
@@ -1353,13 +1352,12 @@ function initAIImport() {
         });
         eventCount++;
       } else {
-        // 课程 → 导入为 Course
         appData.courses.push({
           id: generateId(),
           title: c.title,
           date: c.date,
           startTime: c.startTime,
-          endTime: c.endTime || c.startTime, // 没有结束时间时用开始时间兜底
+          endTime: c.endTime || c.startTime,
           location: c.location || '',
           color: c.color || 'blue',
           people: c.people || [],
@@ -1382,9 +1380,23 @@ function initAIImport() {
     refreshHome();
     $('ai-preview').style.display = 'none';
     $('btn-ai-confirm').style.display = 'none';
+    $('btn-ai-reset').style.display = 'none';   // ← 新增
     $('btn-ai-parse').style.display = 'inline-flex';
   });
-}
+
+  // 重新编辑
+  $('btn-ai-reset').addEventListener('click', () => {
+    parsedCourses = [];
+    $('ai-preview').style.display = 'none';
+    $('btn-ai-confirm').style.display = 'none';
+    $('btn-ai-reset').style.display = 'none';
+    $('btn-ai-parse').style.display = 'inline-flex';
+    $('input-paste-json').value = '';
+    const aiInput = $('input-ai-text');
+    if (aiInput) aiInput.value = '';
+  });
+
+}  // ← initAIImport 结束
 
 function parsePastedJSON() {
   const raw = $('input-paste-json').value.trim();
@@ -1578,6 +1590,8 @@ function showPreview() {
   $('ai-preview').style.display = 'block';
   $('btn-ai-confirm').style.display = 'inline-flex';
   $('btn-ai-parse').style.display = 'none';
+  $('btn-ai-reset').style.display = 'inline-flex';  
+
 
   // 更新确认按钮文案
   const courseN = parsedCourses.filter(c => c.type === 'course' && !c._skip).length;

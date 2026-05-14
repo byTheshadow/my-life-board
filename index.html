@@ -1014,82 +1014,86 @@ ambiguous | 模糊的，有歧义的 | The message was ambiguous.</code>
 <!-- ============================================================
      区块结束：弹窗 - 背景设置
      ============================================================ -->
-
 <!-- ============================================================
      区块开始：弹窗 - 设置
      ============================================================ -->
-<div class="modal-overlay" id="modal-settings">
+<div class="modal-overlay" id="modal-settings" role="dialog" aria-modal="true">
   <div class="modal-sheet modal-sheet-tall">
     <div class="modal-handle"></div>
     <div class="modal-title">⚙️ 设置</div>
 
-    <div class="settings-section">
-      <div class="form-label">AI 配置（OpenAI 兼容接口）</div>
-      <div class="form-group">
-        <label class="form-label">API 地址</label>
-        <input class="form-input" id="input-api-base" type="text" placeholder="例如：https://api.deepseek.com">
-      </div>
-      <div class="form-group">
-        <label class="form-label">API Key</label>
-        <div class="input-with-toggle">
-          <input class="form-input" id="input-api-key" type="password" placeholder="sk-...">
-          <button class="input-toggle-btn" id="btn-toggle-key" aria-label="显示/隐藏">👁️</button>
+    <div class="modal-body">
+
+      <div class="settings-section">
+        <div class="form-label">AI 配置（OpenAI 兼容接口）</div>
+        <div class="form-group">
+          <label class="form-label">API 地址</label>
+          <input class="form-input" id="input-api-base" type="text" placeholder="例如：https://api.deepseek.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">API Key</label>
+          <div class="input-with-toggle">
+            <input class="form-input" id="input-api-key" type="password" placeholder="sk-...">
+            <button class="input-toggle-btn" id="btn-toggle-key" aria-label="显示/隐藏">👁️</button>
+          </div>
+        </div>
+        <div class="ai-tip glass" style="margin-bottom:16px">
+          <strong>💡 说明：</strong>支持所有 OpenAI 兼容接口（DeepSeek、OpenAI、Ollama 等）。
+          模型列表会自动从 <code>/v1/models</code> 获取。Key 仅存本地。
+        </div>
+        <div class="form-group">
+          <label class="form-label">模型</label>
+          <div class="model-select-wrap">
+            <select class="form-input" id="input-api-model">
+              <option value="">请先填写 API 地址并获取模型列表</option>
+            </select>
+            <button class="btn btn-secondary btn-sm" id="btn-fetch-models">获取模型</button>
+          </div>
         </div>
       </div>
-      <div class="ai-tip glass" style="margin-bottom:16px">
-        <strong>💡 说明：</strong>支持所有 OpenAI 兼容接口（DeepSeek、OpenAI、Ollama 等）。
-        模型列表会自动从<code>/v1/models</code> 获取。Key仅存本地。
-      </div>
-      <div class="form-group">
-        <label class="form-label">模型</label>
-        <div class="model-select-wrap">
-          <select class="form-input" id="input-api-model">
-            <option value="">请先填写 API 地址并获取模型列表</option>
-          </select>
-          <button class="btn btn-secondary btn-sm" id="btn-fetch-models">获取模型</button>
+
+      <div class="settings-section">
+        <div class="form-label">通知设置</div>
+        <div class="setting-row">
+          <span>课前提醒</span>
+          <label class="toggle">
+            <input type="checkbox" id="toggle-notification" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <span>提前时间（分钟）</span>
+          <input class="form-input form-input-sm" id="input-notify-minutes" type="number" value="15" min="1" max="60">
+        </div>
+        <div class="setting-row">
+          <span>宠物状态提醒</span>
+          <label class="toggle">
+            <input type="checkbox" id="toggle-pet-notification" checked>
+            <span class="toggle-slider"></span>
+          </label>
         </div>
       </div>
-    </div>
 
-    <div class="settings-section">
-      <div class="form-label">通知设置</div>
-      <div class="setting-row">
-        <span>课前提醒</span>
-        <label class="toggle">
-          <input type="checkbox" id="toggle-notification" checked>
-          <span class="toggle-slider"></span>
-        </label>
+      <div class="settings-section">
+        <div class="form-label">数据管理</div>
+        <button class="btn btn-secondary btn-full" id="btn-export-all" style="margin-bottom:8px">📤 导出全部数据 (JSON)</button>
+        <button class="btn btn-secondary btn-full" id="btn-import-all" style="margin-bottom:8px">📥 导入数据 (JSON)</button>
+        <button class="btn btn-secondary btn-full" id="btn-export-ics" style="margin-bottom:8px">📅 导出课程 (.ics)</button>
+        <input type="file" id="input-import-file" accept=".json" style="display:none">
+        <button class="btn btn-secondary btn-full" id="btn-clear-all" style="color:#ef4444">🗑️ 清除所有数据</button>
       </div>
-      <div class="setting-row">
-        <span>提前时间（分钟）</span>
-        <input class="form-input form-input-sm" id="input-notify-minutes" type="number" value="15" min="1" max="60">
-      </div>
-      <div class="setting-row">
-        <span>宠物状态提醒</span>
-        <label class="toggle">
-          <input type="checkbox" id="toggle-pet-notification" checked>
-          <span class="toggle-slider"></span>
-        </label>
-      </div>
-    </div>
 
-    <div class="settings-section">
-      <div class="form-label">数据管理</div>
-      <button class="btn btn-secondary btn-full" id="btn-export-all" style="margin-bottom:8px">📤 导出全部数据 (JSON)</button>
-      <button class="btn btn-secondary btn-full" id="btn-import-all" style="margin-bottom:8px">📥 导入数据 (JSON)</button>
-      <button class="btn btn-secondary btn-full" id="btn-export-ics" style="margin-bottom:8px">📅 导出课程 (.ics)</button>
-      <input type="file" id="input-import-file" accept=".json" style="display:none">
-      <button class="btn btn-secondary btn-full" id="btn-clear-all" style="color:#ef4444">🗑️ 清除所有数据</button>
-    </div>
+      <div class="modal-actions">
+        <button class="btn btn-primary btn-full" id="btn-save-settings">保存设置</button>
+      </div>
 
-    <div class="modal-footer">
-      <button class="btn btn-primary btn-full" id="btn-save-settings">保存设置</button>
     </div>
   </div>
 </div>
 <!-- ============================================================
      区块结束：弹窗 - 设置
      ============================================================ -->
+
 
 <!-- ============================================================
      区块开始：弹窗 - 添加 Todo

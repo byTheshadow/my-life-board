@@ -1915,8 +1915,7 @@ function updateTamaBubble(pet, state) {
   const personality = pet.personality || 'lively';
   const pConfig = PERSONALITY_CONFIG[personality];
 
-  let phrases;
-  if (state.hunger < 30)     phrases = p
+
   let phrases;
   if (state.hunger < 30)     phrases = pConfig.hungryPhrases;
   else if (state.happy < 30) phrases = pConfig.sadPhrases;

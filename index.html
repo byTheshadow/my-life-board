@@ -227,17 +227,13 @@
 
     <!-- 拓麻歌子区域 -->
     <div class="tama-zone glass-card" id="tama-zone">
-      <!-- 性格标签 -->
       <div class="tama-personality-bar" id="tama-personality-bar">
         <span class="tama-personality-label" id="tama-personality-label">✨ 活泼</span>
         <button class="tama-personality-btn" id="btn-change-personality" aria-label="切换性格">⚙️ 性格</button>
       </div>
-
-      <!-- 主体：精灵 + 对话气泡 -->
       <div class="tama-pet" id="tama-pet">
         <div class="tama-sprite-wrap" id="tama-sprite-wrap">
           <div class="tama-sprite" id="tama-sprite"></div>
-          <!-- 粒子特效容器 -->
           <div class="tama-particles" id="tama-particles"></div>
         </div>
         <div class="tama-bubble" id="tama-bubble" style="display:none">
@@ -245,42 +241,31 @@
           <span class="tama-bubble-cursor" id="tama-bubble-cursor"></span>
         </div>
       </div>
-
-      <!-- AI 对话区 -->
       <div class="tama-chat-area" id="tama-chat-area" style="display:none">
         <div class="tama-chat-messages" id="tama-chat-messages"></div>
         <div class="tama-chat-input-row">
-          <input type="text" class="tama-chat-input" id="tama-chat-input" placeholder="和 TA 说点什么…" maxlength="100">
+          <input type="text" class="tama-chat-input" id="tama-chat-input"
+                 placeholder="和 TA 说点什么…" maxlength="100">
           <button class="tama-chat-send" id="tama-chat-send" aria-label="发送">➤</button>
         </div>
       </div>
-
-      <!-- 状态条 -->
       <div class="tama-stats" id="tama-stats">
         <div class="tama-stat">
           <span class="tama-stat-icon">🍖</span>
-          <div class="tama-stat-bar">
-            <div class="tama-stat-fill hunger" id="tama-hunger" style="width:80%"></div>
-          </div>
+          <div class="tama-stat-bar"><div class="tama-stat-fill hunger" id="tama-hunger" style="width:80%"></div></div>
           <span class="tama-stat-val" id="tama-hunger-val">80</span>
         </div>
         <div class="tama-stat">
           <span class="tama-stat-icon">💖</span>
-          <div class="tama-stat-bar">
-            <div class="tama-stat-fill happy" id="tama-happy" style="width:65%"></div>
-          </div>
+          <div class="tama-stat-bar"><div class="tama-stat-fill happy" id="tama-happy" style="width:65%"></div></div>
           <span class="tama-stat-val" id="tama-happy-val">65</span>
         </div>
         <div class="tama-stat">
           <span class="tama-stat-icon">🧼</span>
-          <div class="tama-stat-bar">
-            <div class="tama-stat-fill clean" id="tama-clean" style="width:90%"></div>
-          </div>
+          <div class="tama-stat-bar"><div class="tama-stat-fill clean" id="tama-clean" style="width:90%"></div></div>
           <span class="tama-stat-val" id="tama-clean-val">90</span>
         </div>
       </div>
-
-      <!-- 操作按钮 -->
       <div class="tama-actions">
         <button class="tama-btn" id="btn-feed" aria-label="喂食">🍖<span>喂食</span></button>
         <button class="tama-btn" id="btn-play" aria-label="玩耍">🎾<span>玩耍</span></button>
@@ -291,17 +276,302 @@
 
     <!-- 宠物信息卡 -->
     <div class="pet-info-section" id="pet-info-section"></div>
-
     <!-- 今日饮食 & 饮水 -->
     <div class="pet-feed-section" id="pet-feed-section"></div>
-
-    <!-- 健康记录（体重 + 疫苗/驱虫） -->
+    <!-- 健康记录 -->
     <div class="pet-health-section" id="pet-health-section"></div>
   </div>
 </div>
 <!-- ============================================================
      区块结束：宠物页 (Pet)
      ============================================================ -->
+
+<!-- ============================================================
+     区块开始：弹窗 - 饮食记录
+     ============================================================ -->
+<div class="modal-overlay" id="modal-add-feed" role="dialog" aria-modal="true">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🍽️ 记录饮食</div>
+    <div class="form-group">
+      <label class="form-label">餐次</label>
+      <div class="seg-tabs" id="feed-type-tabs">
+        <button class="seg-tab active" data-meal="早餐">🌅 早餐</button>
+        <button class="seg-tab" data-meal="午餐">☀️ 午餐</button>
+        <button class="seg-tab" data-meal="晚餐">🌙 晚餐</button>
+        <button class="seg-tab" data-meal="零食">🍬 零食</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">食物名称</label>
+      <input type="text" class="form-input" id="input-feed-food" placeholder="如：猫粮、鸡胸肉…">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">食量</label>
+        <input type="text" class="form-input" id="input-feed-amount" placeholder="如：50g">
+      </div>
+      <div class="form-group">
+        <label class="form-label">时间</label>
+        <input type="time" class="form-input" id="input-feed-time">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">备注</label>
+      <input type="text" class="form-input" id="input-feed-note" placeholder="可选">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-add-feed')">取消</button>
+      <button class="btn btn-primary" id="btn-save-feed">保存记录</button>
+    </div>
+  </div>
+</div>
+<!-- ============================================================
+     区块结束：弹窗 - 饮食记录
+     ============================================================ -->
+
+<!-- ============================================================
+     区块开始：弹窗 - 饮水记录
+     ============================================================ -->
+<div class="modal-overlay" id="modal-add-water" role="dialog" aria-modal="true">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">💧 记录饮水</div>
+    <div class="form-group">
+      <label class="form-label">快速选择</label>
+      <div class="water-quick-btns" id="water-quick-btns">
+        <button class="water-quick-btn" data-ml="50">50ml</button>
+        <button class="water-quick-btn" data-ml="100">100ml</button>
+        <button class="water-quick-btn" data-ml="150">150ml</button>
+        <button class="water-quick-btn" data-ml="200">200ml</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">饮水量（ml）</label>
+      <input type="number" class="form-input" id="input-water-ml"
+             placeholder="输入毫升数" min="1" max="2000">
+    </div>
+    <div class="form-group">
+      <label class="form-label">时间</label>
+      <input type="time" class="form-input" id="input-water-time">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-add-water')">取消</button>
+      <button class="btn btn-primary" id="btn-save-water">保存记录</button>
+    </div>
+  </div>
+</div>
+<!-- ============================================================
+     区块结束：弹窗 - 饮水记录
+     ============================================================ -->
+
+<!-- ============================================================
+     区块开始：弹窗 - 疫苗/驱虫记录
+     ============================================================ -->
+<div class="modal-overlay" id="modal-add-vaccine" role="dialog" aria-modal="true">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">💉 添加健康记录</div>
+    <div class="form-group">
+      <label class="form-label">类型</label>
+      <div class="seg-tabs" id="vaccine-type-tabs">
+        <button class="seg-tab active" data-type="疫苗">💉 疫苗</button>
+        <button class="seg-tab" data-type="驱虫">🐛 驱虫</button>
+        <button class="seg-tab" data-type="体检">🏥 体检</button>
+        <button class="seg-tab" data-type="其他">📋 其他</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">名称</label>
+      <input type="text" class="form-input" id="input-vaccine-name"
+             placeholder="如：狂犬疫苗、体内驱虫…">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">日期</label>
+        <input type="date" class="form-input" id="input-vaccine-date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">下次提醒</label>
+        <input type="date" class="form-input" id="input-vaccine-next">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">医院 / 诊所</label>
+      <input type="text" class="form-input" id="input-vaccine-clinic" placeholder="可选">
+    </div>
+    <div class="form-group">
+      <label class="form-label">备注</label>
+      <input type="text" class="form-input" id="input-vaccine-note" placeholder="可选">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-add-vaccine')">取消</button>
+      <button class="btn btn-primary" id="btn-save-vaccine">保存记录</button>
+    </div>
+  </div>
+</div>
+<!-- ============================================================
+     区块结束：弹窗 - 疫苗/驱虫记录
+     ============================================================ -->
+
+<!-- ============================================================
+     区块开始：弹窗 - 性格设置
+     ============================================================ -->
+<div class="modal-overlay" id="modal-pet-personality" role="dialog" aria-modal="true">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🎭 设置性格</div>
+    <p style="font-size:13px;color:var(--text-secondary);margin:-8px 0 16px">
+      选择预设性格，或完全自定义 TA 的说话风格
+    </p>
+
+    <!-- 预设性格网格 -->
+    <div class="personality-grid" id="personality-grid">
+      <button class="personality-card" data-personality="lively">
+        <span class="personality-emoji">🐶</span>
+        <strong>活泼</strong>
+        <span>热情开朗，爱撒娇</span>
+      </button>
+      <button class="personality-card" data-personality="lazy">
+        <span class="personality-emoji">🐱</span>
+        <strong>慵懒</strong>
+        <span>慢悠悠，偶尔傲娇</span>
+      </button>
+      <button class="personality-card" data-personality="tsundere">
+        <span class="personality-emoji">🦊</span>
+        <strong>傲娇</strong>
+        <span>嘴硬心软</span>
+      </button>
+      <button class="personality-card" data-personality="clingy">
+        <span class="personality-emoji">🐰</span>
+        <strong>粘人</strong>
+        <span>超级依赖主人</span>
+      </button>
+      <button class="personality-card" data-personality="cool">
+        <span class="personality-emoji">🐺</span>
+        <strong>冷静</strong>
+        <span>话少但走心</span>
+      </button>
+      <button class="personality-card" data-personality="foodie">
+        <span class="personality-emoji">🐹</span>
+        <strong>吃货</strong>
+        <span>满脑子都是吃</span>
+      </button>
+      <!-- 自定义入口卡片 -->
+      <button class="personality-card personality-card-custom" data-personality="custom">
+        <span class="personality-emoji">✏️</span>
+        <strong>自定义</strong>
+        <span>完全自己设定</span>
+      </button>
+    </div>
+
+    <!-- 自定义性格面板（默认折叠） -->
+    <div class="custom-personality-panel" id="custom-personality-panel" style="display:none">
+      <div class="custom-personality-divider">
+        <span>自定义性格设置</span>
+      </div>
+      <div class="form-group">
+        <label class="form-label">性格名称</label>
+        <input type="text" class="form-input" id="input-custom-personality-name"
+               placeholder="给这个性格起个名字，如：傻乎乎">
+      </div>
+      <div class="form-group">
+        <label class="form-label">性格 Emoji</label>
+        <input type="text" class="form-input" id="input-custom-personality-emoji"
+               placeholder="一个 emoji，如：🦄" maxlength="4">
+      </div>
+      <div class="form-group">
+        <label class="form-label">AI 人设提示词</label>
+        <textarea class="form-input form-textarea" id="input-custom-personality-prompt"
+                  placeholder="描述 TA 的说话风格，如：你是一只傻乎乎但很可爱的宠物，说话总是搞错词语，但充满善意…" rows="3"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">日常闲聊台词（每行一句，至少填 2 句）</label>
+        <textarea class="form-input form-textarea" id="input-custom-idle-phrases"
+                  placeholder="主人你好呀！&#10;今天也是美好的一天！" rows="3"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">饿了说的话（每行一句）</label>
+        <textarea class="form-input form-textarea" id="input-custom-hungry-phrases"
+                  placeholder="我饿了！&#10;给我吃的！" rows="2"></textarea>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-pet-personality')">取消</button>
+      <button class="btn btn-primary" id="btn-save-personality">确认</button>
+    </div>
+  </div>
+</div>
+<!-- ============================================================
+     区块结束：弹窗 - 性格设置
+     ============================================================ -->
+
+<!-- ============================================================
+     区块开始：弹窗 - 编辑宠物
+     ============================================================ -->
+<div class="modal-overlay" id="modal-edit-pet" role="dialog" aria-modal="true">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">✏️ 编辑宠物信息</div>
+    <div class="form-group">
+      <label class="form-label">名字</label>
+      <input type="text" class="form-input" id="edit-pet-name" placeholder="宠物名字">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">品种</label>
+        <input type="text" class="form-input" id="edit-pet-breed" placeholder="如：橘猫">
+      </div>
+      <div class="form-group">
+        <label class="form-label">性别</label>
+        <select class="form-input" id="edit-pet-gender">
+          <option value="male">♂ 公</option>
+          <option value="female">♀ 母</option>
+          <option value="unknown">未知</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">生日</label>
+        <input type="date" class="form-input" id="edit-pet-birthday">
+      </div>
+      <div class="form-group">
+        <label class="form-label">绝育</label>
+        <select class="form-input" id="edit-pet-neutered">
+          <option value="no">未绝育</option>
+          <option value="yes">已绝育</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">芯片号</label>
+      <input type="text" class="form-input" id="edit-pet-chip" placeholder="可选">
+    </div>
+    <div class="form-group">
+      <label class="form-label">头像 URL</label>
+      <input type="text" class="form-input" id="edit-pet-avatar" placeholder="图片链接或留空">
+    </div>
+    <div class="form-group">
+      <label class="form-label">或上传图片</label>
+      <input type="file" class="form-input" id="edit-pet-avatar-file" accept="image/*">
+    </div>
+    <!-- 危险区域 -->
+    <div class="danger-zone">
+      <div class="danger-zone-title">⚠️ 危险操作</div>
+      <button class="btn btn-danger" id="btn-delete-pet">🗑️ 删除这只宠物</button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-edit-pet')">取消</button>
+      <button class="btn btn-primary" id="btn-save-edit-pet">保存修改</button>
+    </div>
+  </div>
+</div>
+<!-- ============================================================
+     区块结束：弹窗 - 编辑宠物
+     ============================================================ -->
+
 
 <!-- ============================================================
      区块开始：弹窗 - 饮食记录

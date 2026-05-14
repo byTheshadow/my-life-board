@@ -1748,99 +1748,103 @@ function deleteTodo(id) {
 
 let currentPetIndex = 0;
 
-// 性格配置表
+// ── 性格配置表（预设） ────────────────────────────────────────
 const PERSONALITY_CONFIG = {
   lively: {
-    label: '活泼',
-    emoji: '🐶',
-    idlePhrases: ['主人主人！陪我玩嘛！🎾', '今天天气真好！出去溜溜？🌞', '我超级开心的！！！💕', '快来摸摸我！🐾'],
+    label: '活泼', emoji: '🐶',
+    idlePhrases:   ['主人主人！陪我玩嘛！🎾', '今天天气真好！出去溜溜？🌞', '我超级开心的！！！💕', '快来摸摸我！🐾'],
     hungryPhrases: ['主人！我饿了！快给我吃的！🍖', '肚子咕咕叫了！！！', '食物！食物！食物！🍗'],
-    sadPhrases: ['呜呜…好无聊啊…', '主人不陪我玩，好难过😢', '我需要玩耍！！'],
-    dirtyPhrases: ['我好脏脏！帮我洗洗嘛！🛁', '毛毛乱了！梳一梳！'],
-    systemPrompt: '你是一只活泼开朗的宠物，性格热情，爱撒娇，说话喜欢用感叹号和颜文字，充满活力。用第一人称"我"说话，简短可爱。'
+    sadPhrases:    ['呜呜…好无聊啊…', '主人不陪我玩，好难过😢', '我需要玩耍！！'],
+    dirtyPhrases:  ['我好脏脏！帮我洗洗嘛！🛁', '毛毛乱了！梳一梳！'],
+    systemPrompt:  '你是一只活泼开朗的宠物，性格热情，爱撒娇，说话喜欢用感叹号和颜文字，充满活力。用第一人称"我"说话，简短可爱，回复50字以内。'
   },
   lazy: {
-    label: '慵懒',
-    emoji: '🐱',
-    idlePhrases: ['…zZZ…', '好困…再睡一会儿…', '别吵…我在想事情…', '嗯…今天也是慵懒的一天…'],
+    label: '慵懒', emoji: '🐱',
+    idlePhrases:   ['…zZZ…', '好困…再睡一会儿…', '别吵…我在想事情…', '嗯…今天也是慵懒的一天…'],
     hungryPhrases: ['…饿了…', '食物…放这里就行…不用叫我…', '懒得动…但是好饿…'],
-    sadPhrases: ['无聊…但懒得说…', '…随便吧…', '心情不好…别烦我…'],
-    dirtyPhrases: ['脏了…但懒得动…', '…帮我梳一下吧…'],
-    systemPrompt: '你是一只慵懒的宠物，说话慢悠悠，经常用省略号，偶尔傲娇，不爱多说话，但偶尔会说出很走心的话。用第一人称"我"说话，简短。'
+    sadPhrases:    ['无聊…但懒得说…', '…随便吧…', '心情不好…别烦我…'],
+    dirtyPhrases:  ['脏了…但懒得动…', '…帮我梳一下吧…'],
+    systemPrompt:  '你是一只慵懒的宠物，说话慢悠悠，经常用省略号，偶尔傲娇，不爱多说话，但偶尔会说出很走心的话。用第一人称"我"说话，简短，回复50字以内。'
   },
   tsundere: {
-    label: '傲娇',
-    emoji: '🦊',
-    idlePhrases: ['哼！才不是在等你呢！', '…不是因为喜欢你才待在这里的！', '你回来了啊…才没有在等你！', '哼，今天心情还不错，跟你没关系！'],
+    label: '傲娇', emoji: '🦊',
+    idlePhrases:   ['哼！才不是在等你呢！', '…不是因为喜欢你才待在这里的！', '你回来了啊…才没有在等你！', '哼，今天心情还不错，跟你没关系！'],
     hungryPhrases: ['哼！才不是因为饿了才叫你的！', '…给我吃的…不是求你，只是通知你！', '肚子有点响…跟你没关系！'],
-    sadPhrases: ['才没有无聊！只是…只是有点想你而已！', '哼！不是因为想玩才找你的！'],
-    dirtyPhrases: ['才不是想让你摸！只是毛乱了而已！', '哼…帮我梳一下…不是因为喜欢！'],
-    systemPrompt: '你是一只傲娇的宠物，嘴硬心软，经常说"才不是""哼"，不承认自己喜欢主人，但行动上很依赖。用第一人称"我"说话，简短，带傲娇语气。'
+    sadPhrases:    ['才没有无聊！只是…只是有点想你而已！', '哼！不是因为想玩才找你的！'],
+    dirtyPhrases:  ['才不是想让你摸！只是毛乱了而已！', '哼…帮我梳一下…不是因为喜欢！'],
+    systemPrompt:  '你是一只傲娇的宠物，嘴硬心软，经常说"才不是""哼"，不承认自己喜欢主人，但行动上很依赖。用第一人称"我"说话，简短，带傲娇语气，回复50字以内。'
   },
   clingy: {
-    label: '粘人',
-    emoji: '🐰',
-    idlePhrases: ['主人！我在这里！看我看我！💕', '不要离开我！我要一直陪着你！', '主人你去哪里了？我好想你！🥺', '抱抱！我要抱抱！'],
+    label: '粘人', emoji: '🐰',
+    idlePhrases:   ['主人！我在这里！看我看我！💕', '不要离开我！我要一直陪着你！', '主人你去哪里了？我好想你！🥺', '抱抱！我要抱抱！'],
     hungryPhrases: ['主人主人！我饿了！快来喂我！🥺', '不吃饭我会消失的！快来！', '饿饿…主人在哪里…'],
-    sadPhrases: ['主人不陪我…我好孤单…🥺', '呜呜…不要不理我…', '我需要你！'],
-    dirtyPhrases: ['主人帮我梳毛！我要变漂亮！', '脏了！主人快来！'],
-    systemPrompt: '你是一只超级粘人的宠物，极度依赖主人，说话充满撒娇和依赖感，经常用"主人"称呼，喜欢用🥺💕等表情。用第一人称"我"说话，简短可爱。'
+    sadPhrases:    ['主人不陪我…我好孤单…🥺', '呜呜…不要不理我…', '我需要你！'],
+    dirtyPhrases:  ['主人帮我梳毛！我要变漂亮！', '脏了！主人快来！'],
+    systemPrompt:  '你是一只超级粘人的宠物，极度依赖主人，说话充满撒娇和依赖感，经常用"主人"称呼，喜欢用🥺💕等表情。用第一人称"我"说话，简短可爱，回复50字以内。'
   },
   cool: {
-    label: '冷静',
-    emoji: '🐺',
-    idlePhrases: ['一切都好。', '今天也平静。', '我在这里。', '有什么需要吗？'],
+    label: '冷静', emoji: '🐺',
+    idlePhrases:   ['一切都好。', '今天也平静。', '我在这里。', '有什么需要吗？'],
     hungryPhrases: ['需要补充能量了。', '该进食了。', '饿了。'],
-    sadPhrases: ['需要活动一下。', '有些无聊。', '陪我待一会儿吧。'],
-    dirtyPhrases: ['需要清洁了。', '帮我整理一下。'],
-    systemPrompt: '你是一只冷静沉稳的宠物，话不多，但每句都很走心，不用感叹号，语气平静，偶尔说出很有深度的话。用第一人称"我"说话，简短克制。'
+    sadPhrases:    ['需要活动一下。', '有些无聊。', '陪我待一会儿吧。'],
+    dirtyPhrases:  ['需要清洁了。', '帮我整理一下。'],
+    systemPrompt:  '你是一只冷静沉稳的宠物，话不多，但每句都很走心，不用感叹号，语气平静，偶尔说出很有深度的话。用第一人称"我"说话，简短克制，回复50字以内。'
   },
   foodie: {
-    label: '吃货',
-    emoji: '🐹',
-    idlePhrases: ['主人，下一顿吃什么？🍗', '我在想…晚饭吃什么好呢…', '刚才那个味道好香！是什么？', '吃饱了好幸福！🍖'],
+    label: '吃货', emoji: '🐹',
+    idlePhrases:   ['主人，下一顿吃什么？🍗', '我在想…晚饭吃什么好呢…', '刚才那个味道好香！是什么？', '吃饱了好幸福！🍖'],
     hungryPhrases: ['饿！！！快给我吃的！！！🍖🍗🍖', '肚子在抗议了！食物！食物！', '我要吃！！！现在！！！'],
-    sadPhrases: ['没有好吃的，好难过…', '心情不好，需要零食治愈…', '给我吃点好的嘛…'],
-    dirtyPhrases: ['吃完要梳毛，好吧…', '帮我清理一下，然后给我吃的！'],
-    systemPrompt: '你是一只超级爱吃的宠物，满脑子都是食物，说话经常提到吃东西，对食物极度热情，用食物来表达情感。用第一人称"我"说话，简短，充满对食物的热爱。'
+    sadPhrases:    ['没有好吃的，好难过…', '心情不好，需要零食治愈…', '给我吃点好的嘛…'],
+    dirtyPhrases:  ['吃完要梳毛，好吧…', '帮我清理一下，然后给我吃的！'],
+    systemPrompt:  '你是一只超级爱吃的宠物，满脑子都是食物，说话经常提到吃东西，对食物极度热情，用食物来表达情感。用第一人称"我"说话，简短，充满对食物的热爱，回复50字以内。'
   }
 };
 
+// 获取当前宠物的有效性格配置（含自定义）
+function getPersonalityConfig(pet) {
+  if (pet.personality === 'custom' && pet.customPersonality) {
+    const cp = pet.customPersonality;
+    return {
+      label:         cp.name   || '自定义',
+      emoji:         cp.emoji  || '✨',
+      idlePhrases:   cp.idlePhrases   || ['你好~'],
+      hungryPhrases: cp.hungryPhrases || ['我饿了…'],
+      sadPhrases:    ['好无聊…'],
+      dirtyPhrases:  ['帮我梳梳毛…'],
+      systemPrompt:  cp.prompt || '你是一只可爱的宠物，用第一人称"我"说话，简短，回复50字以内。'
+    };
+  }
+  return PERSONALITY_CONFIG[pet.personality] || PERSONALITY_CONFIG.lively;
+}
+
+// ── 状态衰减 ──────────────────────────────────────────────────
 function getPetState(petId) {
   if (!appData.petStates[petId]) {
-    appData.petStates[petId] = {
-      hunger: 80,
-      happy: 65,
-      clean: 90,
-      lastUpdate: Date.now()
-    };
+    appData.petStates[petId] = { hunger: 80, happy: 65, clean: 90, lastUpdate: Date.now() };
     saveData();
   }
-
   const state = appData.petStates[petId];
-  const elapsed = (Date.now() - state.lastUpdate) / 1000 / 60; // 分钟
-  const decay = elapsed * 0.05;
-
-  state.hunger = Math.max(0, state.hunger - decay * 1.2);
-  state.happy  = Math.max(0, state.happy  - decay * 0.8);
-  state.clean  = Math.max(0, state.clean  - decay * 0.5);
+  const elapsed = (Date.now() - state.lastUpdate) / 1000 / 60;
+  const decay   = elapsed * 0.05;
+  state.hunger  = Math.max(0, state.hunger - decay * 1.2);
+  state.happy   = Math.max(0, state.happy  - decay * 0.8);
+    state.clean   = Math.max(0, state.clean  - decay * 0.5);
   state.lastUpdate = Date.now();
   saveData();
-
   return state;
 }
 
+// ── 页面刷新 ──────────────────────────────────────────────────
 function refreshPet() {
   if (appData.pets.length === 0) {
     $('pet-placeholder').style.display = 'flex';
     $('pet-content').style.display = 'none';
     return;
   }
-
   $('pet-placeholder').style.display = 'none';
   $('pet-content').style.display = 'block';
 
-  // 渲染宠物标签
+  // 宠物标签
   const tabs = $('pet-tabs');
   tabs.innerHTML = appData.pets.map((p, i) =>
     `<button class="pet-tab ${i === currentPetIndex ? 'active' : ''}" data-index="${i}">${p.name}</button>`
@@ -1848,11 +1852,14 @@ function refreshPet() {
   tabs.querySelectorAll('.pet-tab').forEach(tab => {
     tab.addEventListener('click', () => {
       currentPetIndex = parseInt(tab.dataset.index);
+      // 关闭聊天区
+      $('tama-chat-area').style.display = 'none';
+      $('btn-tama-chat').classList.remove('active');
       refreshPet();
     });
   });
 
-  const pet = appData.pets[currentPetIndex];
+  const pet   = appData.pets[currentPetIndex];
   const state = getPetState(pet.id);
 
   renderTamagotchi(pet, state);
@@ -1862,16 +1869,18 @@ function refreshPet() {
 }
 
 // ── 拓麻歌子渲染 ──────────────────────────────────────────────
-
 function renderTamagotchi(pet, state) {
   const sprite = $('tama-sprite');
-  const mood = state.hunger < 30 ? 'hungry' : state.happy < 30 ? 'sad' : state.clean < 30 ? 'dirty' : 'happy';
+  const mood   = state.hunger < 30 ? 'hungry'
+               : state.happy  < 30 ? 'sad'
+               : state.clean  < 30 ? 'dirty'
+               : 'happy';
 
   if (pet.avatar) {
     sprite.innerHTML = `<img src="${pet.avatar}" alt="${pet.name}" class="tama-img ${mood}">`;
   } else {
     sprite.innerHTML = `
-      <div class="tama-default-sprite ${mood}" id="tama-default-sprite">
+      <div class="tama-default-sprite ${mood}">
         <div class="tama-body"></div>
         <div class="tama-eyes"><span></span><span></span></div>
         <div class="tama-mouth"></div>
@@ -1880,55 +1889,47 @@ function renderTamagotchi(pet, state) {
   }
 
   // 性格标签
-  const personality = pet.personality || 'lively';
-  const pConfig = PERSONALITY_CONFIG[personality];
+  const pConfig = getPersonalityConfig(pet);
   $('tama-personality-label').textContent = `${pConfig.emoji} ${pConfig.label}`;
 
-  // 气泡（非 AI 对话时显示状态气泡）
-  const chatArea = $('tama-chat-area');
-  if (chatArea.style.display === 'none') {
+  // 气泡（非聊天模式时显示）
+  if ($('tama-chat-area').style.display === 'none') {
     updateTamaBubble(pet, state);
   }
 
-  // 状态条 + 数值
-  const hungerVal = Math.round(state.hunger);
-  const happyVal  = Math.round(state.happy);
-  const cleanVal  = Math.round(state.clean);
+  // 状态条
+  const hv = Math.round(state.hunger);
+  const av = Math.round(state.happy);
+  const cv = Math.round(state.clean);
 
-  $('tama-hunger').style.width = hungerVal + '%';
-  $('tama-happy').style.width  = happyVal  + '%';
-  $('tama-clean').style.width  = cleanVal  + '%';
+  $('tama-hunger').style.width = hv + '%';
+  $('tama-happy').style.width  = av + '%';
+  $('tama-clean').style.width  = cv + '%';
 
-  // 状态条颜色随数值变化
-  $('tama-hunger').className = `tama-stat-fill hunger ${hungerVal < 30 ? 'low' : ''}`;
-  $('tama-happy').className  = `tama-stat-fill happy  ${happyVal  < 30 ? 'low' : ''}`;
-  $('tama-clean').className  = `tama-stat-fill clean  ${cleanVal  < 30 ? 'low' : ''}`;
+  $('tama-hunger').className = `tama-stat-fill hunger${hv < 30 ? ' low' : ''}`;
+  $('tama-happy').className  = `tama-stat-fill happy${av  < 30 ? ' low' : ''}`;
+  $('tama-clean').className  = `tama-stat-fill clean${cv  < 30 ? ' low' : ''}`;
 
-  if ($('tama-hunger-val')) $('tama-hunger-val').textContent = hungerVal;
-  if ($('tama-happy-val'))  $('tama-happy-val').textContent  = happyVal;
-  if ($('tama-clean-val'))  $('tama-clean-val').textContent  = cleanVal;
+  $('tama-hunger-val').textContent = hv;
+  $('tama-happy-val').textContent  = av;
+  $('tama-clean-val').textContent  = cv;
 }
 
 function updateTamaBubble(pet, state) {
-  const bubble     = $('tama-bubble');
-  const bubbleText = $('tama-bubble-text');
-  const personality = pet.personality || 'lively';
-  const pConfig = PERSONALITY_CONFIG[personality];
-
-
+  const pConfig = getPersonalityConfig(pet);
   let phrases;
-  if (state.hunger < 30)     phrases = pConfig.hungryPhrases;
-  else if (state.happy < 30) phrases = pConfig.sadPhrases;
-  else if (state.clean < 30) phrases = pConfig.dirtyPhrases;
-  else                       phrases = pConfig.idlePhrases;
+  if      (state.hunger < 30) phrases = pConfig.hungryPhrases;
+  else if (state.happy  < 30) phrases = pConfig.sadPhrases;
+  else if (state.clean  < 30) phrases = pConfig.dirtyPhrases;
+  else                        phrases = pConfig.idlePhrases;
 
   const text = phrases[Math.floor(Math.random() * phrases.length)];
-  bubble.style.display = 'block';
-  typewriterBubble(bubbleText, text);
+  $('tama-bubble').style.display = 'block';
+  typewriterBubble($('tama-bubble-text'), text);
 }
 
 // 打字机效果
-function typewriterBubble(el, text, speed = 60) {
+function typewriterBubble(el, text, speed = 55) {
   el.textContent = '';
   const cursor = $('tama-bubble-cursor');
   if (cursor) cursor.style.display = 'inline';
@@ -1958,25 +1959,27 @@ function spawnParticles(type) {
     const p = document.createElement('span');
     p.className = 'tama-particle';
     p.textContent = pool[Math.floor(Math.random() * pool.length)];
-    p.style.cssText = `
-      left: ${30 + Math.random() * 40}%;
-      animation-delay: ${Math.random() * 0.4}s;
-      font-size: ${12 + Math.random() * 10}px;
-    `;
+    p.style.cssText = `left:${30 + Math.random() * 40}%;animation-delay:${Math.random() * 0.4}s;font-size:${12 + Math.random() * 10}px`;
     container.appendChild(p);
     setTimeout(() => p.remove(), 1200);
   }
 }
 
+function animateTama(type) {
+  const wrap = $('tama-sprite-wrap');
+  if (!wrap) return;
+  wrap.classList.remove('bounce', 'spin', 'shake');
+  void wrap.offsetWidth;
+  wrap.classList.add(type);
+  setTimeout(() => wrap.classList.remove(type), 600);
+}
+
 // ── AI 对话 ───────────────────────────────────────────────────
-
-let tamaTypingTimer = null;
-
 async function sendTamaChat() {
   const pet = appData.pets[currentPetIndex];
   if (!pet) return;
 
-  const input = $('tama-chat-input');
+  const input    = $('tama-chat-input');
   const userText = input.value.trim();
   if (!userText) return;
 
@@ -1989,17 +1992,15 @@ async function sendTamaChat() {
   input.value = '';
   appendChatMsg('user', userText);
 
-  const state = getPetState(pet.id);
-  const personality = pet.personality || 'lively';
-  const pConfig = PERSONALITY_CONFIG[personality];
+  const state   = getPetState(pet.id);
+  const pConfig = getPersonalityConfig(pet);
 
   const systemPrompt = `${pConfig.systemPrompt}
-你的名字是"${pet.name}"，品种是${pet.breed || '未知'}，性别${pet.gender === 'male' ? '公' : pet.gender === 'female' ? '母' : '未知'}。
-当前状态：饱食度${Math.round(state.hunger)}/100，心情${Math.round(state.happy)}/100，清洁度${Math.round(state.clean)}/100。
-根据当前状态自然地融入对话，回复控制在50字以内，不要用markdown格式。`;
+你的名字是"${pet.name}"，品种：${pet.breed || '未知'}，性别：${pet.gender === 'male' ? '公' : pet.gender === 'female' ? '母' : '未知'}。
+当前状态 — 饱食度：${Math.round(state.hunger)}/100，心情：${Math.round(state.happy)}/100，清洁度：${Math.round(state.clean)}/100。
+根据状态自然融入对话，不要用 markdown 格式。`;
 
-  // 显示 loading
-  const loadingId = 'tama-loading-' + Date.now();
+  const loadingId = 'tama-msg-' + Date.now();
   appendChatMsg('pet', '…', loadingId);
 
   try {
@@ -2010,32 +2011,23 @@ async function sendTamaChat() {
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: apiModel || 'gpt-3.5-turbo',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user',   content: userText }
-        ],
+        model:       apiModel || 'gpt-3.5-turbo',
+        messages:    [{ role: 'system', content: systemPrompt }, { role: 'user', content: userText }],
         temperature: 0.9,
-        max_tokens: 120
+        max_tokens:  120
       })
     });
-
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
+    const data  = await res.json();
     const reply = data.choices?.[0]?.message?.content?.trim() || '…';
 
-    // 替换 loading 气泡
     const loadingEl = document.getElementById(loadingId);
     if (loadingEl) {
       const textEl = loadingEl.querySelector('.tama-chat-text');
-      if (textEl) typewriterBubble(textEl, reply, 40);
+      if (textEl) typewriterBubble(textEl, reply, 35);
     }
-
-    // 同步更新主气泡
-    const bubbleText = $('tama-bubble-text');
     $('tama-bubble').style.display = 'block';
-    typewriterBubble(bubbleText, reply);
-
+    typewriterBubble($('tama-bubble-text'), reply);
     spawnParticles('chat');
   } catch (e) {
     const loadingEl = document.getElementById(loadingId);
@@ -2049,127 +2041,177 @@ async function sendTamaChat() {
 
 function appendChatMsg(role, text, id) {
   const messages = $('tama-chat-messages');
-  const div = document.createElement('div');
-  div.className = `tama-chat-msg ${role}`;
+  const pet      = appData.pets[currentPetIndex];
+  const pConfig  = getPersonalityConfig(pet);
+  const div      = document.createElement('div');
+  div.className  = `tama-chat-msg ${role}`;
   if (id) div.id = id;
-
-  const pet = appData.pets[currentPetIndex];
-  const personality = pet?.personality || 'lively';
-  const pConfig = PERSONALITY_CONFIG[personality];
-
-  div.innerHTML = role === 'pet'
+  div.innerHTML  = role === 'pet'
     ? `<span class="tama-chat-avatar">${pConfig.emoji}</span><span class="tama-chat-text">${text}</span>`
     : `<span class="tama-chat-text">${text}</span>`;
-
   messages.appendChild(div);
   messages.scrollTop = messages.scrollHeight;
 }
 
 // ── 宠物信息渲染 ──────────────────────────────────────────────
-
 function renderPetInfo(pet) {
-  const section = $('pet-info-section');
+  const section    = $('pet-info-section');
   const genderText = { male: '♂ 公', female: '♀ 母', unknown: '未知' };
-  const age = pet.birthday ? calculateAge(pet.birthday) : '未知';
+  const age        = pet.birthday ? calculateAge(pet.birthday) : '未知';
 
   section.innerHTML = `
-    <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
+    <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;padding:0 16px">
       <span>📋 基本信息</span>
-      <button class="btn btn-ghost btn-sm" onclick="editCurrentPet()">✏️ 编辑</button>
+      <button class="btn btn-secondary btn-sm" onclick="openEditPetModal()">✏️ 编辑</button>
     </div>
-    <div class="pet-info-grid glass-card" style="margin:0 16px;padding:18px 20px">
+    <div class="pet-info-grid glass-card" style="margin:8px 16px 0;padding:16px 18px">
       <div class="pet-info-row"><span>品种</span><strong>${pet.breed || '未知'}</strong></div>
       <div class="pet-info-row"><span>性别</span><strong>${genderText[pet.gender] || '未知'}</strong></div>
       <div class="pet-info-row"><span>年龄</span><strong>${age}</strong></div>
       <div class="pet-info-row"><span>生日</span><strong>${pet.birthday || '未设置'}</strong></div>
       <div class="pet-info-row"><span>绝育</span><strong>${pet.neutered === 'yes' ? '✅ 已绝育' : '❌ 未绝育'}</strong></div>
       ${pet.chip ? `<div class="pet-info-row"><span>芯片号</span><strong>${pet.chip}</strong></div>` : ''}
-    </div>
-  `;
+    </div>`;
 }
 
 function calculateAge(birthday) {
-  const birth = new Date(birthday);
-  const now = new Date();
+  const birth  = new Date(birthday);
+  const now    = new Date();
   const months = (now.getFullYear() - birth.getFullYear()) * 12 + now.getMonth() - birth.getMonth();
-  if (months < 1) return '不足1个月';
+  if (months < 1)  return '不足1个月';
   if (months < 12) return `${months} 个月`;
   const years = Math.floor(months / 12);
-  const rem = months % 12;
+  const rem   = months % 12;
   return rem > 0 ? `${years} 岁 ${rem} 个月` : `${years} 岁`;
 }
 
-// ── 饮食 & 饮水渲染 ───────────────────────────────────────────
+// ── 编辑宠物弹窗 ──────────────────────────────────────────────
+function openEditPetModal() {
+  const pet = appData.pets[currentPetIndex];
+  if (!pet) return;
+  $('edit-pet-name').value     = pet.name     || '';
+  $('edit-pet-breed').value    = pet.breed    || '';
+  $('edit-pet-gender').value   = pet.gender   || 'unknown';
+  $('edit-pet-birthday').value = pet.birthday || '';
+  $('edit-pet-neutered').value = pet.neutered || 'no';
+  $('edit-pet-chip').value     = pet.chip     || '';
+  $('edit-pet-avatar').value   = pet.avatar && !pet.avatar.startsWith('data:') ? pet.avatar : '';
+  openModal('modal-edit-pet');
+}
 
+function saveEditPet() {
+  const pet  = appData.pets[currentPetIndex];
+  if (!pet) return;
+  const name = $('edit-pet-name').value.trim();
+  if (!name) { showToast('名字不能为空', 'warning'); return; }
+
+  const doSave = (avatarVal) => {
+    pet.name     = name;
+    pet.breed    = $('edit-pet-breed').value.trim();
+    pet.gender   = $('edit-pet-gender').value;
+    pet.birthday = $('edit-pet-birthday').value;
+    pet.neutered = $('edit-pet-neutered').value;
+    pet.chip     = $('edit-pet-chip').value.trim();
+    if (avatarVal !== null) pet.avatar = avatarVal;
+    saveData();
+    closeModal('modal-edit-pet');
+    refreshPet();
+    showToast(`${name} 的信息已更新 ✅`);
+  };
+
+  const fileInput = $('edit-pet-avatar-file');
+  if (fileInput && fileInput.files[0]) {
+    const reader = new FileReader();
+    reader.onload = (e) => doSave(e.target.result);
+    reader.readAsDataURL(fileInput.files[0]);
+  } else {
+    const urlVal = $('edit-pet-avatar').value.trim();
+    doSave(urlVal || pet.avatar);
+  }
+}
+
+function deleteCurrentPet() {
+  const pet = appData.pets[currentPetIndex];
+  if (!pet) return;
+  if (!confirm(`确定要删除「${pet.name}」吗？此操作不可撤销。`)) return;
+  // 清理状态数据
+  delete appData.petStates[pet.id];
+  appData.pets.splice(currentPetIndex, 1);
+  currentPetIndex = Math.max(0, currentPetIndex - 1);
+  saveData();
+  closeModal('modal-edit-pet');
+  refreshPet();
+  refreshHome();
+  showToast('宠物已删除');
+}
+
+// ── 饮食渲染 ──────────────────────────────────────────────────
 function renderPetFeeding(pet) {
-  const section = $('pet-feed-section');
-  const todayStr = formatDate(new Date());
-  const todayFeeds = (pet.feeds || []).filter(f => f.date === todayStr);
-  const todayWater = (pet.waterLogs || []).filter(w => w.date === todayStr);
-  const totalWater = todayWater.reduce((sum, w) => sum + (w.ml || 0), 0);
+  const section     = $('pet-feed-section');
+  const todayStr    = formatDate(new Date());
+  const todayFeeds  = (pet.feeds     || []).filter(f => f.date === todayStr);
+  const todayWater  = (pet.waterLogs || []).filter(w => w.date === todayStr);
+  const totalWater  = todayWater.reduce((s, w) => s + (w.ml || 0), 0);
+  const waterTarget = 300; // ml 目标（可后续配置化）
 
-  const meals = ['早餐', '午餐', '晚餐', '零食'];
+  const meals     = ['早餐', '午餐', '晚餐', '零食'];
   const mealIcons = { '早餐': '🌅', '午餐': '☀️', '晚餐': '🌙', '零食': '🍬' };
 
   section.innerHTML = `
-    <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
+    <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;padding:0 16px">
       <span>🍽️ 今日饮食</span>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-ghost btn-sm" onclick="openModal('modal-add-water')">💧 饮水</button>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-secondary btn-sm" onclick="openModal('modal-add-water')">💧 饮水</button>
         <button class="btn btn-primary btn-sm" onclick="openFeedModal()">+ 记录</button>
       </div>
     </div>
-    <div class="feed-cards" style="padding:0 16px">
+    <div class="feed-cards" style="padding:0 16px;margin-top:8px">
       ${meals.map(meal => {
         const records = todayFeeds.filter(f => f.meal === meal);
-        const latest = records[records.length - 1];
+        const latest  = records[records.length - 1];
         return `
           <div class="feed-card glass ${latest ? 'fed' : ''}" onclick="openFeedModal('${meal}')">
             <span class="feed-icon">${mealIcons[meal]}</span>
             <div class="feed-card-body">
               <span class="feed-label">${meal}</span>
-              <span class="feed-status">${latest ? `✅ ${latest.food || ''}${latest.amount ? ' · ' + latest.amount : ''}` : '未记录'}</span>
+              <span class="feed-status">${latest
+                ? `✅ ${latest.food || ''}${latest.amount ? ' · ' + latest.amount : ''}`
+                : '未记录'}</span>
             </div>
           </div>`;
       }).join('')}
     </div>
-
-    <!-- 饮水追踪 -->
-    <div class="water-tracker glass-card" style="margin:12px 16px 0">
+    <div class="water-tracker glass-card" style="margin:10px 16px 0">
       <div class="water-tracker-header">
         <span>💧 今日饮水</span>
-        <span class="water-total">${totalWater} ml</span>
+        <span class="water-total">${totalWater} <small>/ ${waterTarget} ml</small></span>
       </div>
       <div class="water-bar-wrap">
-        <div class="water-bar-fill" style="width:${Math.min(100, totalWater / 3)}%"></div>
+        <div class="water-bar-fill" style="width:${Math.min(100, totalWater / waterTarget * 100)}%"></div>
       </div>
       <div class="water-logs">
         ${todayWater.length === 0
           ? '<span class="water-empty">今天还没有饮水记录</span>'
           : todayWater.map(w => `
               <span class="water-log-chip">
-                ${w.time || ''} · ${w.ml}ml
+                ${w.time ? w.time + ' · ' : ''}${w.ml}ml
                 <button class="water-log-del" onclick="deleteWaterLog('${w.id}')" aria-label="删除">×</button>
-              </span>`).join('')
-        }
+              </span>`).join('')}
       </div>
-    </div>
-  `;
+    </div>`;
 }
 
 function openFeedModal(meal) {
-  // 预设餐次
   if (meal) {
-    $('feed-type-tabs').querySelectorAll('.feed-type-tab').forEach(btn => {
+    $('feed-type-tabs').querySelectorAll('.seg-tab').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.meal === meal);
     });
   }
-  // 预填时间
   const now = new Date();
-  $('input-feed-time').value = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-  $('input-feed-food').value = '';
+  $('input-feed-time').value   = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  $('input-feed-food').value   = '';
   $('input-feed-amount').value = '';
-  $('input-feed-note').value = '';
+  $('input-feed-note').value   = '';
   openModal('modal-add-feed');
 }
 
@@ -2182,15 +2224,13 @@ function deleteWaterLog(id) {
 }
 
 // ── 健康记录渲染 ──────────────────────────────────────────────
-
 function renderPetHealth(pet) {
-  const section = $('pet-health-section');
-  const weights = pet.weights || [];
+  const section  = $('pet-health-section');
+  const weights  = pet.weights  || [];
   const vaccines = pet.vaccines || [];
+  const today    = new Date();
   const lastWeight = weights.length > 0 ? weights[weights.length - 1] : null;
 
-  // 即将到期的疫苗/驱虫（30天内）
-  const today = new Date();
   const soon = vaccines.filter(v => {
     if (!v.nextDate) return false;
     const diff = (new Date(v.nextDate) - today) / 86400000;
@@ -2200,34 +2240,34 @@ function renderPetHealth(pet) {
   const typeIcon = { '疫苗': '💉', '驱虫': '🐛', '体检': '🏥', '其他': '📋' };
 
   section.innerHTML = `
-    <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
+    <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;padding:0 16px">
       <span>🏥 健康记录</span>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-ghost btn-sm" onclick="openAddVaccineModal()">+ 疫苗/驱虫</button>
-        <button class="btn btn-ghost btn-sm" onclick="addWeightRecord()">+ 体重</button>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-secondary btn-sm" onclick="openAddVaccineModal()">+ 疫苗/驱虫</button>
+        <button class="btn btn-secondary btn-sm" onclick="addWeightRecord()">+ 体重</button>
       </div>
     </div>
-
-    <!-- 体重卡片 -->
-    <div class="health-cards" style="padding:0 16px">
+    <div class="health-cards" style="padding:0 16px;margin-top:8px">
       <div class="health-card glass">
         <span class="health-icon">⚖️</span>
         <div>
           <div class="health-label">最新体重</div>
-          <div class="health-value">${lastWeight ? lastWeight.value + ' kg · ' + lastWeight.date : '未记录'}</div>
+          <div class="health-value">${lastWeight ? lastWeight.value + ' kg' : '未记录'}</div>
+          ${lastWeight ? `<div class="health-meta">${lastWeight.date}</div>` : ''}
         </div>
       </div>
       <div class="health-card glass">
         <span class="health-icon">💉</span>
         <div>
           <div class="health-label">健康记录</div>
-          <div class="health-value">${vaccines.length} 条${soon.length > 0 ? ` · <span class="vaccine-soon-badge">⚠️ ${soon.length} 条即将到期</span>` : ''}</div>
+          <div class="health-value">${vaccines.length} 条</div>
+          ${soon.length > 0 ? `<div class="health-meta warn">⚠️ ${soon.length} 条即将到期</div>` : ''}
         </div>
       </div>
     </div>
 
     ${soon.length > 0 ? `
-    <div class="vaccine-alert glass-card" style="margin:8px 16px">
+    <div class="vaccine-alert glass-card" style="margin:10px 16px 0">
       <div class="vaccine-alert-title">⚠️ 即将到期提醒</div>
       ${soon.map(v => `
         <div class="vaccine-alert-item">
@@ -2236,42 +2276,40 @@ function renderPetHealth(pet) {
         </div>`).join('')}
     </div>` : ''}
 
-    <!-- 疫苗/驱虫列表 -->
-    <div class="vaccine-list" style="padding:0 16px;margin-top:8px">
+    <div class="vaccine-list" style="padding:0 16px;margin-top:10px">
       ${vaccines.length === 0
         ? `<div class="empty-hint">还没有健康记录，点击上方按钮添加</div>`
         : vaccines.slice().reverse().map(v => {
-            const isExpiringSoon = v.nextDate && (new Date(v.nextDate) - today) / 86400000 <= 30 && (new Date(v.nextDate) - today) / 86400000 >= 0;
+            const diff = v.nextDate ? (new Date(v.nextDate) - today) / 86400000 : Infinity;
+            const expiring = diff >= 0 && diff <= 30;
             return `
-              <div class="vaccine-item glass ${isExpiringSoon ? 'expiring' : ''}">
+              <div class="vaccine-item glass${expiring ? ' expiring' : ''}">
                 <div class="vaccine-item-left">
                   <span class="vaccine-type-icon">${typeIcon[v.type] || '📋'}</span>
                   <div>
                     <div class="vaccine-name">${v.name}</div>
                     <div class="vaccine-meta">
-                      ${v.date} ${v.clinic ? '· ' + v.clinic : ''}
-                      ${v.note ? '<br><span class="vaccine-note">' + v.note + '</span>' : ''}
+                      ${v.date}${v.clinic ? ' · ' + v.clinic : ''}
+                      ${v.note ? `<br><span class="vaccine-note">${v.note}</span>` : ''}
                     </div>
                   </div>
                 </div>
                 <div class="vaccine-item-right">
-                  ${v.nextDate ? `<span class="vaccine-next ${isExpiringSoon ? 'soon' : ''}">下次 ${v.nextDate}</span>` : ''}
+                  ${v.nextDate ? `<span class="vaccine-next${expiring ? ' soon' : ''}">下次 ${v.nextDate}</span>` : ''}
                   <button class="icon-btn-sm" onclick="deleteVaccineRecord('${v.id}')" aria-label="删除">🗑️</button>
                 </div>
               </div>`;
-          }).join('')
-      }
-    </div>
-  `;
+          }).join('')}
+    </div>`;
 }
 
 function openAddVaccineModal() {
-  $('input-vaccine-name').value = '';
-  $('input-vaccine-date').value = formatDate(new Date());
-  $('input-vaccine-next').value = '';
+  $('input-vaccine-name').value   = '';
+  $('input-vaccine-date').value   = formatDate(new Date());
+  $('input-vaccine-next').value   = '';
   $('input-vaccine-clinic').value = '';
-  $('input-vaccine-note').value = '';
-  $('vaccine-type-tabs').querySelectorAll('.vaccine-type-tab').forEach((btn, i) => {
+  $('input-vaccine-note').value   = '';
+  $('vaccine-type-tabs').querySelectorAll('.seg-tab').forEach((btn, i) => {
     btn.classList.toggle('active', i === 0);
   });
   openModal('modal-add-vaccine');
@@ -2287,7 +2325,7 @@ function deleteVaccineRecord(id) {
 }
 
 function addWeightRecord() {
-  const pet = appData.pets[currentPetIndex];
+  const pet   = appData.pets[currentPetIndex];
   if (!pet) return;
   const value = prompt('输入体重（kg）：', '');
   if (!value || isNaN(value)) return;
@@ -2295,37 +2333,29 @@ function addWeightRecord() {
   pet.weights.push({ date: formatDate(new Date()), value: parseFloat(value) });
   saveData();
   renderPetHealth(pet);
-  showToast('体重已记录');
-}
-
-function editCurrentPet() {
-  showToast('编辑功能即将上线', 'info');
+  showToast('体重已记录 ⚖️');
 }
 
 // ── 初始化 ────────────────────────────────────────────────────
-
 function initPet() {
-  // 保存宠物
+
+  // 添加宠物
+  $('btn-add-pet').addEventListener('click', () => openModal('modal-add-pet'));
+
   $('btn-save-pet').addEventListener('click', () => {
     const name = $('input-pet-name').value.trim();
     if (!name) { showToast('请输入宠物名字', 'warning'); return; }
-
     const pet = {
-      id: generateId(),
-      name,
-      breed:     $('input-pet-breed').value.trim(),
-      gender:    $('input-pet-gender').value,
-      birthday:  $('input-pet-birthday').value,
-      neutered:  $('input-pet-neutered').value,
-      chip:      $('input-pet-chip').value.trim(),
-      avatar:    $('input-pet-avatar').value.trim(),
+      id: generateId(), name,
+      breed:       $('input-pet-breed').value.trim(),
+      gender:      $('input-pet-gender').value,
+      birthday:    $('input-pet-birthday').value,
+      neutered:    $('input-pet-neutered').value,
+      chip:        $('input-pet-chip').value.trim(),
+      avatar:      $('input-pet-avatar').value.trim(),
       personality: 'lively',
-      feeds:     [],
-      waterLogs: [],
-      weights:   [],
-      vaccines:  []
+      feeds: [], waterLogs: [], weights: [], vaccines: []
     };
-
     const fileInput = $('input-pet-avatar-file');
     if (fileInput && fileInput.files[0]) {
       const reader = new FileReader();
@@ -2334,8 +2364,7 @@ function initPet() {
         appData.pets.push(pet);
         saveData();
         closeModal('modal-add-pet');
-        refreshPet();
-        refreshHome();
+        refreshPet(); refreshHome();
         showToast(`${name} 已添加 🐾`);
       };
       reader.readAsDataURL(fileInput.files[0]);
@@ -2343,124 +2372,144 @@ function initPet() {
       appData.pets.push(pet);
       saveData();
       closeModal('modal-add-pet');
-      refreshPet();
-      refreshHome();
+      refreshPet(); refreshHome();
       showToast(`${name} 已添加 🐾`);
     }
   });
 
-  // 拓麻歌子互动按钮
+  // 编辑宠物
+  $('btn-save-edit-pet').addEventListener('click', saveEditPet);
+  $('btn-delete-pet').addEventListener('click', deleteCurrentPet);
+
+  // 拓麻歌子互动
   $('btn-feed').addEventListener('click', () => {
-    const pet = appData.pets[currentPetIndex];
-    if (!pet) return;
+    const pet = appData.pets[currentPetIndex]; if (!pet) return;
     const state = getPetState(pet.id);
     state.hunger = Math.min(100, state.hunger + 25);
-    saveData();
-    spawnParticles('feed');
-    animateTama('bounce');
-    showToast('喂食成功！🍖');
-    refreshPet();
-    refreshHome();
+    saveData(); spawnParticles('feed'); animateTama('bounce');
+    showToast('喂食成功！🍖'); refreshPet(); refreshHome();
   });
 
   $('btn-play').addEventListener('click', () => {
-    const pet = appData.pets[currentPetIndex];
-    if (!pet) return;
+    const pet = appData.pets[currentPetIndex]; if (!pet) return;
     const state = getPetState(pet.id);
     state.happy = Math.min(100, state.happy + 20);
-    saveData();
-    spawnParticles('play');
-    animateTama('spin');
-    showToast('玩耍中！🎾');
-    refreshPet();
-    refreshHome();
+    saveData(); spawnParticles('play'); animateTama('spin');
+    showToast('玩耍中！🎾'); refreshPet(); refreshHome();
   });
 
   $('btn-clean').addEventListener('click', () => {
-    const pet = appData.pets[currentPetIndex];
-    if (!pet) return;
+    const pet = appData.pets[currentPetIndex]; if (!pet) return;
     const state = getPetState(pet.id);
     state.clean = Math.min(100, state.clean + 30);
-    saveData();
-    spawnParticles('clean');
-    animateTama('shake');
-    showToast('梳毛完成！✨');
-    refreshPet();
-    refreshHome();
+    saveData(); spawnParticles('clean'); animateTama('shake');
+    showToast('梳毛完成！✨'); refreshPet(); refreshHome();
   });
 
-  // 聊天按钮
+  // 聊天开关
   $('btn-tama-chat').addEventListener('click', () => {
     const chatArea = $('tama-chat-area');
-    const isOpen = chatArea.style.display !== 'none';
+    const isOpen   = chatArea.style.display !== 'none';
     chatArea.style.display = isOpen ? 'none' : 'flex';
     $('btn-tama-chat').classList.toggle('active', !isOpen);
     if (!isOpen) {
       $('tama-chat-messages').innerHTML = '';
-      // 开场白
       const pet = appData.pets[currentPetIndex];
       if (pet) {
-        const state = getPetState(pet.id);
-        const personality = pet.personality || 'lively';
-        const pConfig = PERSONALITY_CONFIG[personality];
+        const pConfig = getPersonalityConfig(pet);
         const greeting = pConfig.idlePhrases[Math.floor(Math.random() * pConfig.idlePhrases.length)];
         setTimeout(() => appendChatMsg('pet', greeting), 300);
       }
     }
   });
 
-  // 发送聊天
-  $('btn-tama-chat-send') && $('btn-tama-chat-send').addEventListener('click', sendTamaChat);
   $('tama-chat-send').addEventListener('click', sendTamaChat);
   $('tama-chat-input').addEventListener('keydown', e => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendTamaChat(); }
   });
 
-  // 性格按钮
+  // 性格弹窗
   $('btn-change-personality').addEventListener('click', () => {
-    const pet = appData.pets[currentPetIndex];
-    if (!pet) return;
+    const pet = appData.pets[currentPetIndex]; if (!pet) return;
     // 高亮当前性格
-    $('personality-grid').querySelectorAll('.personality-card').forEach(card => {
+        $('personality-grid').querySelectorAll('.personality-card').forEach(card => {
       card.classList.toggle('selected', card.dataset.personality === (pet.personality || 'lively'));
     });
+    // 如果当前是自定义，展开面板并填入已有数据
+    if (pet.personality === 'custom' && pet.customPersonality) {
+      const cp = pet.customPersonality;
+      $('input-custom-personality-name').value   = cp.name   || '';
+      $('input-custom-personality-emoji').value  = cp.emoji  || '';
+      $('input-custom-personality-prompt').value = cp.prompt || '';
+      $('input-custom-idle-phrases').value        = (cp.idlePhrases   || []).join('\n');
+      $('input-custom-hungry-phrases').value      = (cp.hungryPhrases || []).join('\n');
+      $('custom-personality-panel').style.display = 'block';
+    } else {
+      $('custom-personality-panel').style.display = 'none';
+    }
     openModal('modal-pet-personality');
   });
 
-  // 性格卡片选择
+  // 性格卡片点击
   $('personality-grid').addEventListener('click', e => {
     const card = e.target.closest('.personality-card');
     if (!card) return;
     $('personality-grid').querySelectorAll('.personality-card').forEach(c => c.classList.remove('selected'));
     card.classList.add('selected');
+    // 自定义卡片展开面板
+    const isCustom = card.dataset.personality === 'custom';
+    $('custom-personality-panel').style.display = isCustom ? 'block' : 'none';
   });
 
   // 保存性格
   $('btn-save-personality').addEventListener('click', () => {
     const selected = $('personality-grid').querySelector('.personality-card.selected');
     if (!selected) { showToast('请选择一个性格', 'warning'); return; }
-    const pet = appData.pets[currentPetIndex];
-    if (!pet) return;
-    pet.personality = selected.dataset.personality;
+    const pet = appData.pets[currentPetIndex]; if (!pet) return;
+
+    const personalityType = selected.dataset.personality;
+
+    if (personalityType === 'custom') {
+      const name   = $('input-custom-personality-name').value.trim();
+      const emoji  = $('input-custom-personality-emoji').value.trim();
+      const prompt = $('input-custom-personality-prompt').value.trim();
+      const idleRaw   = $('input-custom-idle-phrases').value.trim();
+      const hungryRaw = $('input-custom-hungry-phrases').value.trim();
+
+      if (!name)  { showToast('请填写性格名称', 'warning'); return; }
+      if (!prompt){ showToast('请填写 AI 人设提示词', 'warning'); return; }
+
+      const idlePhrases   = idleRaw.split('\n').map(s => s.trim()).filter(Boolean);
+      const hungryPhrases = hungryRaw.split('\n').map(s => s.trim()).filter(Boolean);
+
+      if (idlePhrases.length < 2) { showToast('闲聊台词至少填 2 句', 'warning'); return; }
+
+      pet.personality       = 'custom';
+      pet.customPersonality = { name, emoji: emoji || '✨', prompt, idlePhrases, hungryPhrases };
+    } else {
+      pet.personality       = personalityType;
+      pet.customPersonality = null;
+    }
+
     saveData();
     closeModal('modal-pet-personality');
     refreshPet();
-    showToast(`性格已设置为「${PERSONALITY_CONFIG[pet.personality].label}」✨`);
+    const pConfig = getPersonalityConfig(pet);
+    showToast(`性格已设置为「${pConfig.label}」${pConfig.emoji}`);
   });
 
   // 饮食弹窗 - 餐次 Tab
   $('feed-type-tabs').addEventListener('click', e => {
-    const tab = e.target.closest('.feed-type-tab');
+    const tab = e.target.closest('.seg-tab');
     if (!tab) return;
-    $('feed-type-tabs').querySelectorAll('.feed-type-tab').forEach(t => t.classList.remove('active'));
+    $('feed-type-tabs').querySelectorAll('.seg-tab').forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
   });
 
   // 保存饮食记录
   $('btn-save-feed').addEventListener('click', () => {
-    const pet = appData.pets[currentPetIndex];
-    if (!pet) return;
-    const activeTab = $('feed-type-tabs').querySelector('.feed-type-tab.active');
+    const pet = appData.pets[currentPetIndex]; if (!pet) return;
+    const activeTab = $('feed-type-tabs').querySelector('.seg-tab.active');
     const meal   = activeTab ? activeTab.dataset.meal : '午餐';
     const food   = $('input-feed-food').value.trim();
     const amount = $('input-feed-amount').value.trim();
@@ -2468,15 +2517,7 @@ function initPet() {
     const note   = $('input-feed-note').value.trim();
 
     if (!pet.feeds) pet.feeds = [];
-    pet.feeds.push({
-      id:     generateId(),
-      date:   formatDate(new Date()),
-      meal,
-      food,
-      amount,
-      time,
-      note
-    });
+    pet.feeds.push({ id: generateId(), date: formatDate(new Date()), meal, food, amount, time, note });
     saveData();
     closeModal('modal-add-feed');
     renderPetFeeding(pet);
@@ -2484,46 +2525,27 @@ function initPet() {
   });
 
   // 饮水弹窗 - 快捷按钮
-  $('modal-add-water').querySelectorAll('.water-quick-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      $('input-water-ml').value = btn.dataset.ml;
-      $('modal-add-water').querySelectorAll('.water-quick-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-    });
-  });
-
-  // 预填饮水时间
-  $('modal-add-water').addEventListener('click', e => {
-    if (e.target === $('modal-add-water') || e.target.classList.contains('modal-overlay')) return;
+  $('water-quick-btns').addEventListener('click', e => {
+    const btn = e.target.closest('.water-quick-btn');
+    if (!btn) return;
+    $('input-water-ml').value = btn.dataset.ml;
+    $('water-quick-btns').querySelectorAll('.water-quick-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
   });
 
   // 打开饮水弹窗时预填时间
-  const origOpenModal = window.openModal;
-  // 在 initPet 中监听饮水弹窗打开
-  document.addEventListener('petly:openModal', e => {
-    if (e.detail === 'modal-add-water') {
-      const now = new Date();
-      $('input-water-time').value = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-      $('input-water-ml').value = '';
-      $('modal-add-water').querySelectorAll('.water-quick-btn').forEach(b => b.classList.remove('active'));
-    }
+  document.getElementById('modal-add-water').addEventListener('click', e => {
+    // 只在弹窗首次显示时预填（通过 openModal 触发）
   });
 
   // 保存饮水记录
   $('btn-save-water').addEventListener('click', () => {
-    const pet = appData.pets[currentPetIndex];
-    if (!pet) return;
-    const ml = parseInt($('input-water-ml').value);
+    const pet = appData.pets[currentPetIndex]; if (!pet) return;
+    const ml  = parseInt($('input-water-ml').value);
     if (!ml || ml <= 0) { showToast('请输入有效的饮水量', 'warning'); return; }
     const time = $('input-water-time').value;
-
     if (!pet.waterLogs) pet.waterLogs = [];
-    pet.waterLogs.push({
-      id:   generateId(),
-      date: formatDate(new Date()),
-      ml,
-      time
-    });
+    pet.waterLogs.push({ id: generateId(), date: formatDate(new Date()), ml, time });
     saveData();
     closeModal('modal-add-water');
     renderPetFeeding(pet);
@@ -2532,17 +2554,16 @@ function initPet() {
 
   // 疫苗类型 Tab
   $('vaccine-type-tabs').addEventListener('click', e => {
-    const tab = e.target.closest('.vaccine-type-tab');
+    const tab = e.target.closest('.seg-tab');
     if (!tab) return;
-    $('vaccine-type-tabs').querySelectorAll('.vaccine-type-tab').forEach(t => t.classList.remove('active'));
+    $('vaccine-type-tabs').querySelectorAll('.seg-tab').forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
   });
 
   // 保存疫苗/驱虫记录
   $('btn-save-vaccine').addEventListener('click', () => {
-    const pet = appData.pets[currentPetIndex];
-    if (!pet) return;
-    const activeTab = $('vaccine-type-tabs').querySelector('.vaccine-type-tab.active');
+    const pet = appData.pets[currentPetIndex]; if (!pet) return;
+    const activeTab = $('vaccine-type-tabs').querySelector('.seg-tab.active');
     const type   = activeTab ? activeTab.dataset.type : '疫苗';
     const name   = $('input-vaccine-name').value.trim();
     const date   = $('input-vaccine-date').value;
@@ -2554,29 +2575,30 @@ function initPet() {
     if (!date) { showToast('请选择日期', 'warning'); return; }
 
     if (!pet.vaccines) pet.vaccines = [];
-    pet.vaccines.push({
-      id:       generateId(),
-      type,
-      name,
-      date,
-      nextDate: next || null,
-      clinic,
-      note
-    });
+    pet.vaccines.push({ id: generateId(), type, name, date, nextDate: next || null, clinic, note });
     saveData();
     closeModal('modal-add-vaccine');
     renderPetHealth(pet);
     showToast(`${type}记录已添加 💉`);
   });
 
-  $('btn-add-pet').addEventListener('click', () => openModal('modal-add-pet'));
+  // 饮水弹窗打开时预填时间
+  const _origOpen = window.openModal;
+  window.openModal = function(id) {
+    if (id === 'modal-add-water') {
+      const now = new Date();
+      $('input-water-time').value = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+      $('input-water-ml').value   = '';
+      $('water-quick-btns').querySelectorAll('.water-quick-btn').forEach(b => b.classList.remove('active'));
+    }
+    _origOpen(id);
+  };
 }
 
 function animateTama(type) {
   const wrap = $('tama-sprite-wrap');
-    if (!wrap) return;
+  if (!wrap) return;
   wrap.classList.remove('bounce', 'spin', 'shake');
-  // 强制重排触发动画重置
   void wrap.offsetWidth;
   wrap.classList.add(type);
   setTimeout(() => wrap.classList.remove(type), 600);
@@ -2585,6 +2607,8 @@ function animateTama(type) {
 /* ============================================================
    区块结束：宠物管理
    ============================================================ */
+
+
 
 /* ============================================================
    区块开始：背单词系统

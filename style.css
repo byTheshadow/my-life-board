@@ -2847,30 +2847,32 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 4px 10px;
+  padding: 0 2px 12px;
 }
 
 .tama-personality-label {
   font-size: 13px;
   font-weight: 600;
   color: var(--accent);
-  letter-spacing: 0.3px;
 }
 
 .tama-personality-btn {
   font-size: 12px;
-  padding: 4px 10px;
+  font-weight: 600;
+  font-family: inherit;
+  padding: 5px 12px;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-subtle);
   background: var(--surface);
   color: var(--text-secondary);
   cursor: pointer;
-  transition: var(--transition);
+  transition: all var(--transition);
 }
 
 .tama-personality-btn:hover {
   background: var(--surface-hover);
-  color: var(--text-primary);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 /* ── 精灵容器 & 动画 ─────────────────────────────────────────── */
@@ -2880,21 +2882,16 @@ body {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-}
-
-/* idle 浮动动画 */
-.tama-sprite-wrap {
   animation: tama-float 3s ease-in-out infinite;
 }
 
 @keyframes tama-float {
-  0%, 100% { transform: translateY(0px); }
+  0%, 100% { transform: translateY(0); }
   50%       { transform: translateY(-8px); }
 }
 
-/* 互动动画 */
 .tama-sprite-wrap.bounce {
-  animation: tama-bounce 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+  animation: tama-bounce 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
 
 @keyframes tama-bounce {
@@ -2907,7 +2904,7 @@ body {
 }
 
 .tama-sprite-wrap.spin {
-  animation: tama-spin 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: tama-spin 0.55s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
 @keyframes tama-spin {
@@ -2918,7 +2915,7 @@ body {
 }
 
 .tama-sprite-wrap.shake {
-  animation: tama-shake 0.5s ease;
+  animation: tama-shake 0.5s ease both;
 }
 
 @keyframes tama-shake {
@@ -2931,12 +2928,11 @@ body {
   90%       { transform: translateX(3px) rotate(1deg); }
 }
 
-/* 情绪对应的精灵样式 */
+/* ── 默认精灵 ────────────────────────────────────────────────── */
 .tama-default-sprite {
   position: relative;
   width: 80px;
   height: 80px;
-  transition: all 0.4s ease;
 }
 
 .tama-default-sprite .tama-body {
@@ -2974,9 +2970,9 @@ body {
   height: 10px;
   background: #fff;
   border-radius: 50%;
-  position: relative;
   box-shadow: 0 1px 3px rgba(0,0,0,0.2);
   animation: tama-blink 4s ease-in-out infinite;
+  position: relative;
 }
 
 .tama-default-sprite .tama-eyes span::after {
@@ -3041,21 +3037,22 @@ body {
   border-radius: 50%;
 }
 
-/* 自定义头像情绪动画 */
+/* ── 自定义头像 ──────────────────────────────────────────────── */
 .tama-img {
   width: 80px;
   height: 80px;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid var(--accent-soft);
-  box-shadow: 0 4px 16px color-mix(in srgb, var(--accent) 25%, transparent);
+  border: 3px solid var(--border-color);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--accent) 20%, transparent);
+  transition: filter 0.4s ease;
 }
 
 .tama-img.sad    { filter: saturate(0.6) brightness(0.9); }
-.tama-img.hungry { filter: saturate(0.8); animation: tama-hungry-shake 1.5s ease-in-out infinite; }
 .tama-img.dirty  { filter: sepia(0.3); }
+.tama-img.hungry { animation: tama-hungry-rock 1.5s ease-in-out infinite; }
 
-@keyframes tama-hungry-shake {
+@keyframes tama-hungry-rock {
   0%, 100% { transform: rotate(0deg); }
   25%       { transform: rotate(-3deg); }
   75%       { transform: rotate(3deg); }
@@ -3072,9 +3069,8 @@ body {
 .tama-particle {
   position: absolute;
   bottom: 50%;
-  animation: particle-fly 1.1s ease-out forwards;
-  z-index: 10;
   user-select: none;
+  animation: particle-fly 1.1s ease-out forwards;
 }
 
 @keyframes particle-fly {
@@ -3083,25 +3079,24 @@ body {
   100% { transform: translateY(-70px) scale(1.2) rotate(20deg); opacity: 0; }
 }
 
-/* ── 气泡打字机 ──────────────────────────────────────────────── */
+/* ── 气泡 ────────────────────────────────────────────────────── */
 .tama-bubble {
   position: absolute;
-  top: -52px;
+  top: -56px;
   left: 50%;
   transform: translateX(-50%);
-  background: var(--bg-blur-card);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: var(--bg-blur-strong);
+  backdrop-filter: blur(20px) saturate(1.6);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   padding: 8px 14px;
   font-size: 13px;
   color: var(--text-primary);
-  white-space: nowrap;
   max-width: 220px;
-  white-space: normal;
   text-align: center;
-  box-shadow: var(--shadow-card);
+  white-space: normal;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
   animation: bubble-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   z-index: 5;
 }
@@ -3123,7 +3118,7 @@ body {
   left: 50%;
   transform: translateX(-50%);
   border: 6px solid transparent;
-  border-top-color: var(--bg-blur-card);
+  border-top-color: var(--bg-blur-strong);
   z-index: 1;
 }
 
@@ -3162,10 +3157,10 @@ body {
 
 @keyframes stat-pulse {
   0%, 100% { opacity: 1; }
-  50%       { opacity: 0.6; }
+  50%       { opacity: 0.55; }
 }
 
-/* ── 聊天按钮激活态 ──────────────────────────────────────────── */
+/* ── 聊天按钮激活 ────────────────────────────────────────────── */
 .tama-btn.active {
   background: var(--accent);
   color: #fff;
@@ -3179,14 +3174,14 @@ body {
   gap: 8px;
   margin-top: 12px;
   padding: 12px;
-  background: var(--bg-blur);
-  border-radius: var(--radius-md);
+  background: var(--surface);
   border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
   animation: slide-down 0.25s ease;
 }
 
 @keyframes slide-down {
-  from { opacity: 0; transform: translateY(-8px); }
+  from { opacity: 0; transform: translateY(-6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
@@ -3196,9 +3191,9 @@ body {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 4px 0;
+  padding: 2px 0;
   scrollbar-width: thin;
-  scrollbar-color: var(--border-color) transparent;
+  scrollbar-color: var(--border-subtle) transparent;
 }
 
 .tama-chat-msg {
@@ -3209,7 +3204,7 @@ body {
 }
 
 @keyframes msg-in {
-  from { opacity: 0; transform: translateY(6px); }
+  from { opacity: 0; transform: translateY(4px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
@@ -3226,14 +3221,14 @@ body {
 .tama-chat-text {
   max-width: 75%;
   padding: 8px 12px;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   font-size: 13px;
   line-height: 1.5;
   word-break: break-word;
 }
 
 .tama-chat-msg.pet .tama-chat-text {
-  background: var(--surface);
+  background: var(--surface-hover);
   border: 1px solid var(--border-subtle);
   color: var(--text-primary);
   border-bottom-left-radius: 4px;
@@ -3253,25 +3248,33 @@ body {
 
 .tama-chat-input {
   flex: 1;
-  padding: 8px 12px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-color);
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
   background: var(--surface);
   color: var(--text-primary);
   font-size: 13px;
+  font-family: inherit;
   outline: none;
-  transition: var(--transition);
+  transition: all var(--transition);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .tama-chat-input:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent);
+  background: var(--surface-hover);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.tama-chat-input::placeholder {
+  color: var(--text-tertiary);
 }
 
 .tama-chat-send {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-md);
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-sm);
   border: none;
   background: var(--accent);
   color: #fff;
@@ -3280,20 +3283,58 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: var(--transition);
+  transition: all var(--transition);
   flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(124, 110, 247, 0.35);
 }
 
 .tama-chat-send:hover {
-  background: var(--accent-2, var(--accent));
-  transform: scale(1.05);
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(124, 110, 247, 0.45);
 }
 
-/* ── 性格选择弹窗 ────────────────────────────────────────────── */
+/* ── 分段选择器（Seg Tabs）────────────────────────────────────── */
+.seg-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.seg-tab {
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--transition);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.seg-tab:hover {
+  background: var(--surface-hover);
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+.seg-tab.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(124, 110, 247, 0.35);
+}
+
+/* ── 性格选择网格 ────────────────────────────────────────────── */
 .personality-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+  margin-bottom: 4px;
 }
 
 .personality-card {
@@ -3302,33 +3343,42 @@ body {
   align-items: center;
   gap: 4px;
   padding: 14px 10px;
-  border-radius: var(--radius-md);
-  border: 2px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
   background: var(--surface);
   cursor: pointer;
-  transition: var(--transition);
+  transition: all var(--transition);
   text-align: center;
+  font-family: inherit;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .personality-card:hover {
-  border-color: var(--accent);
   background: var(--surface-hover);
+  border-color: var(--accent);
   transform: translateY(-2px);
 }
 
 .personality-card.selected {
   border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
+  background: var(--surface-hover);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.personality-card-custom.selected {
+  border-color: var(--accent-2, var(--accent));
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 .personality-emoji {
-  font-size: 28px;
+  font-size: 26px;
   line-height: 1;
 }
 
 .personality-card strong {
-  font-size: 14px;
+  font-size: 13px;
+  font-weight: 700;
   color: var(--text-primary);
 }
 
@@ -3338,38 +3388,82 @@ body {
   line-height: 1.4;
 }
 
-/* ── 饮食记录弹窗 ────────────────────────────────────────────── */
-.feed-type-tabs,
-.vaccine-type-tabs {
+/* ── 自定义性格面板 ──────────────────────────────────────────── */
+.custom-personality-panel {
+  margin-top: 4px;
+  padding-top: 4px;
+  animation: slide-down 0.2s ease;
+}
+
+.custom-personality-divider {
   display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.feed-type-tab,
-.vaccine-type-tab {
-  padding: 6px 14px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-color);
-  background: var(--surface);
-  color: var(--text-secondary);
-  font-size: 13px;
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.feed-type-tab:hover,
-.vaccine-type-tab:hover {
-  border-color: var(--accent);
-  color: var(--text-primary);
-}
-
-.feed-type-tab.active,
-.vaccine-type-tab.active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  color: var(--text-tertiary);
+  font-size: 12px;
   font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.custom-personality-divider::before,
+.custom-personality-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-subtle);
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 72px;
+  line-height: 1.6;
+}
+
+/* ── 弹窗操作按钮行 ──────────────────────────────────────────── */
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.modal-actions .btn {
+  flex: 1;
+}
+
+/* ── 危险区域 ────────────────────────────────────────────────── */
+.danger-zone {
+  margin-top: 20px;
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid color-mix(in srgb, #ff6b6b 40%, transparent);
+  background: color-mix(in srgb, #ff6b6b 6%, var(--surface));
+}
+
+.danger-zone-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #ff6b6b;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.btn-danger {
+  background: color-mix(in srgb, #ff6b6b 15%, var(--surface));
+  color: #ff6b6b;
+  border: 1px solid color-mix(in srgb, #ff6b6b 40%, transparent);
+  width: 100%;
+  font-family: inherit;
+}
+
+.btn-danger:hover {
+  background: #ff6b6b;
+  color: #fff;
+  border-color: #ff6b6b;
+  box-shadow: 0 4px 14px rgba(255, 107, 107, 0.35);
+  transform: translateY(-1px);
 }
 
 /* ── 饮食卡片 ────────────────────────────────────────────────── */
@@ -3377,7 +3471,6 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
-  margin-top: 8px;
 }
 
 .feed-card {
@@ -3385,19 +3478,23 @@ body {
   align-items: center;
   gap: 10px;
   padding: 12px 14px;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   border: 1px solid var(--border-subtle);
+  background: var(--surface);
   cursor: pointer;
-  transition: var(--transition);
+  transition: all var(--transition);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .feed-card:hover {
+  background: var(--surface-hover);
   border-color: var(--accent);
   transform: translateY(-1px);
 }
 
 .feed-card.fed {
-  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
   background: color-mix(in srgb, var(--accent) 6%, var(--surface));
 }
 
@@ -3435,11 +3532,14 @@ body {
 .water-tracker-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: baseline;
+  margin-bottom: 10px;
+}
+
+.water-tracker-header > span {
   font-size: 14px;
   font-weight: 600;
   color: var(--text-primary);
-  margin-bottom: 10px;
 }
 
 .water-total {
@@ -3448,10 +3548,16 @@ body {
   color: #4fc3f7;
 }
 
+.water-total small {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-tertiary);
+}
+
 .water-bar-wrap {
-  height: 6px;
+  height: 5px;
   background: var(--border-subtle);
-  border-radius: 3px;
+  border-radius: 99px;
   overflow: hidden;
   margin-bottom: 10px;
 }
@@ -3459,7 +3565,7 @@ body {
 .water-bar-fill {
   height: 100%;
   background: linear-gradient(90deg, #4fc3f7, #0288d1);
-  border-radius: 3px;
+  border-radius: 99px;
   transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
   min-width: 4px;
 }
@@ -3468,7 +3574,7 @@ body {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  min-height: 24px;
+  min-height: 22px;
 }
 
 .water-empty {
@@ -3481,9 +3587,9 @@ body {
   align-items: center;
   gap: 4px;
   padding: 3px 8px 3px 10px;
-  background: color-mix(in srgb, #4fc3f7 12%, var(--surface));
-  border: 1px solid color-mix(in srgb, #4fc3f7 30%, transparent);
-  border-radius: 20px;
+  background: color-mix(in srgb, #4fc3f7 10%, var(--surface));
+  border: 1px solid color-mix(in srgb, #4fc3f7 25%, transparent);
+  border-radius: 99px;
   font-size: 12px;
   color: var(--text-secondary);
 }
@@ -3496,7 +3602,8 @@ body {
   font-size: 14px;
   line-height: 1;
   padding: 0;
-  transition: color 0.2s;
+  transition: color var(--transition);
+  font-family: inherit;
 }
 
 .water-log-del:hover {
@@ -3506,47 +3613,107 @@ body {
 .water-quick-btns {
   display: flex;
   gap: 8px;
-  flex-wrap: wrap;
 }
 
 .water-quick-btn {
   flex: 1;
-  min-width: 60px;
   padding: 8px 4px;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-subtle);
   background: var(--surface);
   color: var(--text-secondary);
   font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
   cursor: pointer;
-  transition: var(--transition);
+  transition: all var(--transition);
   text-align: center;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
-.water-quick-btn:hover,
+.water-quick-btn:hover {
+  background: var(--surface-hover);
+  border-color: #4fc3f7;
+  color: var(--text-primary);
+}
+
 .water-quick-btn.active {
   background: #4fc3f7;
   border-color: #4fc3f7;
   color: #fff;
+  box-shadow: 0 4px 14px rgba(79, 195, 247, 0.35);
+}
+
+/* ── 健康卡片 ────────────────────────────────────────────────── */
+.health-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.health-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.health-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.health-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.health-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.health-meta {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+
+.health-meta.warn {
+  color: #ffb74d;
   font-weight: 600;
 }
 
-/* ── 健康记录 ────────────────────────────────────────────────── */
+/* ── 疫苗到期提醒 ────────────────────────────────────────────── */
 .vaccine-alert {
   padding: 12px 16px;
   border-left: 3px solid #ffb74d;
 }
 
 .vaccine-alert-title {
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 700;
   color: #ffb74d;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   margin-bottom: 8px;
 }
 
 .vaccine-alert-item {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   font-size: 13px;
   color: var(--text-secondary);
   padding: 3px 0;
@@ -3555,13 +3722,15 @@ body {
 .vaccine-alert-date {
   color: #ffb74d;
   font-weight: 600;
+  font-size: 12px;
 }
 
+/* ── 疫苗列表 ────────────────────────────────────────────────── */
 .vaccine-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .vaccine-item {
@@ -3569,13 +3738,20 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 12px 14px;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   border: 1px solid var(--border-subtle);
-  transition: var(--transition);
+  background: var(--surface);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: all var(--transition);
+}
+
+.vaccine-item:hover {
+  background: var(--surface-hover);
 }
 
 .vaccine-item.expiring {
-  border-color: color-mix(in srgb, #ffb74d 50%, transparent);
+  border-color: color-mix(in srgb, #ffb74d 45%, transparent);
   background: color-mix(in srgb, #ffb74d 6%, var(--surface));
 }
 
@@ -3583,6 +3759,7 @@ body {
   display: flex;
   align-items: flex-start;
   gap: 10px;
+  min-width: 0;
 }
 
 .vaccine-type-icon {
@@ -3605,8 +3782,8 @@ body {
 }
 
 .vaccine-note {
-  color: var(--text-tertiary);
   font-style: italic;
+  color: var(--text-tertiary);
 }
 
 .vaccine-item-right {
@@ -3626,55 +3803,74 @@ body {
 
 .vaccine-next.soon {
   color: #ffb74d;
-  font-weight: 600;
+  font-weight: 700;
 }
 
-.vaccine-soon-badge {
-  color: #ffb74d;
-  font-size: 12px;
-}
-
+/* ── 小图标按钮 ──────────────────────────────────────────────── */
 .icon-btn-sm {
   background: none;
   border: none;
   cursor: pointer;
   font-size: 15px;
-  padding: 2px;
-  opacity: 0.5;
-  transition: opacity 0.2s;
+  padding: 2px 4px;
+  opacity: 0.45;
+  transition: opacity var(--transition);
   line-height: 1;
+  font-family: inherit;
+  border-radius: var(--radius-sm);
 }
 
 .icon-btn-sm:hover {
   opacity: 1;
+  background: color-mix(in srgb, #ff6b6b 10%, transparent);
 }
 
+/* ── 空状态提示 ──────────────────────────────────────────────── */
 .empty-hint {
   text-align: center;
   color: var(--text-tertiary);
   font-size: 13px;
-  padding: 20px 0;
+  padding: 24px 0;
+}
+
+/* ── section-title 间距统一 ──────────────────────────────────── */
+.pet-info-section .section-title,
+.pet-feed-section .section-title,
+.pet-health-section .section-title {
+  margin-bottom: 0;
+}
+
+.pet-info-section,
+.pet-feed-section,
+.pet-health-section {
+  margin-bottom: 20px;
 }
 
 /* ── 响应式 ──────────────────────────────────────────────────── */
 @media (max-width: 374px) {
-  .feed-cards {
+  .feed-cards,
+  .health-cards {
     grid-template-columns: 1fr;
   }
 
   .personality-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
   }
 
   .tama-bubble {
     max-width: 180px;
     font-size: 12px;
   }
+
+  .water-quick-btns {
+    flex-wrap: wrap;
+  }
+
+  .water-quick-btn {
+    min-width: calc(50% - 4px);
+  }
 }
 
 /* ============================================================
    区块结束：宠物深化 - 拓麻歌子增强 & 饮食 & 健康
    ============================================================ */
-
-
-

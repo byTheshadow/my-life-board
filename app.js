@@ -730,31 +730,28 @@ function renderDayCourses() {
     </div>`;
   });
 
-  // 待办
-todos.forEach(t => {
-  const priorityColors = { high: '#ef4444', medium: '#f59e0b', low: '22c55e' };
-  const priorityLabel  = { high: '高',      medium: '中',      low: '低' };
-  // AI 导入的 event 带时间前缀，普通 todo 显示优先级
-  const isEvent = /^\[[\d:]+/.test(t.text);
-  const subText = isEvent ? '日程事件' : `优先级：${priorityLabel[t.priority] || '中'}`;
+   // 待办
+  todos.forEach(t => {
+    const priorityColors = { high: '#ef4444', medium: '#f59e0b', low: '#22c55e' };
+    const priorityLabel  = { high: '高',      medium: '中',      low: '低' };
+    const isEvent = /^\[[\d:]+/.test(t.text);
+    const subText = isEvent ? '日程事件' : ('优先级：' + (priorityLabel[t.priority] || '中'));
+    const checkIcon = t.done
+      ? '<svg viewBox="0 0 12 12" fill="none" width="12" height="12"><polyline points="2,6 5,9 10,3" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+      : '';
 
-  html += `
-  <div class="course-item todo-item glass ${t.done ? 'done' : ''}" data-id="${t.id}">
-    <div class="course-item-color" style="background:${priorityColors[t.priority] || '#f59e0b'}"></div>
-    <label class="todo-check-label" onclick="toggleTodo('${t.id}')">
-      <span class="todo-checkbox ${t.done ? 'checked' : ''}" aria-hidden="true">
-        ${t.done
-          ? `<svg viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`
-          : ''}
-      </span>
-    </label>
-    <div class="course-item-body" onclick="toggleTodo('${t.id}')" style="cursor:pointer">
-      <div class="course-item-title ${t.done ? 'line-through' : ''}">${t.text}</div>
-      <div class="course-item-sub">${subText}</div>
-    </div>
-    <button class="course-action-btn" onclick="deleteTodo('${t.id}')" aria-label="删除">🗑️</button>
-  </div>`;
-});
+    html += '<div class="course-item todo-item glass ' + (t.done ? 'done' : '') + '" data-id="' + t.id + '">'
+      + '<div class="course-item-color" style="background:' + (priorityColors[t.priority] || '#f59e0b') + '"></div>'
+      + '<label class="todo-check-label" onclick="toggleTodo(\'' + t.id + '\')">'
+      + '  <span class="todo-checkbox ' + (t.done ? 'checked' : '') + '" aria-hidden="true">' + checkIcon + '</span>'
+      + '</label>'
+      + '<div class="course-item-body" onclick="toggleTodo(\'' + t.id + '\')" style="cursor:pointer">'
+      + '  <div class="course-item-title ' + (t.done ? 'line-through' : '') + '">' + t.text + '</div>'
+      + '  <div class="course-item-sub">' + subText + '</div>'
+      + '</div>'
+      + '<button class="course-action-btn" onclick="deleteTodo(\'' + t.id + '\')" aria-label="删除">🗑️</button>'
+      + '</div>';
+  });
 
 
 // 展开课程详情面板（含人员+课程Todo）

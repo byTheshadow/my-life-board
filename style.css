@@ -661,9 +661,12 @@ body {
 .modal-sheet {
   width: 100%;
   max-width: 520px;
-  /* 最大高度：留出顶部安全距离，超出则滚动 */
-  max-height: 92dvh;
-  max-height: 92vh; /* 兜底，不支持 dvh 的浏览器 */
+  /*
+   * 最大高度 = 视口高度 - 导航栏高度 - 少量顶部留白
+   * 用 var(--nav-height) 自动跟随导航栏高度变化
+   */
+  max-height: calc(92dvh - var(--nav-height, 64px));
+  max-height: calc(92vh  - var(--nav-height, 64px)); /* 兜底 */
   display: flex;
   flex-direction: column;
   background: var(--bg-blur-strong);
@@ -674,35 +677,33 @@ body {
   box-shadow: 0 -8px 48px rgba(0,0,0,0.18);
   transform: translateY(100%);
   transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
-  /* 防止整体被截断 */
   overflow: hidden;
+  /*
+   * 关键：把弹窗整体往上抬，避开底部导航栏
+   * margin-bottom 让弹窗悬浮在导航栏上方
+   */
+  margin-bottom: var(--nav-height, 64px);
 }
 
 .modal-overlay.open .modal-sheet {
   transform: translateY(0);
 }
 
-/* handle 固定在顶部，不参与滚动 */
 .modal-handle {
   width: 36px;
   height: 4px;
   border-radius: 99px;
   background: var(--border-subtle);
-  margin: 0 auto 0;
+  margin: 20px auto 0;
   flex-shrink: 0;
-  padding-top: 20px; /* 用 padding 撑开顶部间距 */
-  box-sizing: content-box;
 }
 
-/* 可滚动内容区 */
 .modal-body {
   flex: 1;
   overflow-y: auto;
-  padding: 20px 24px 40px;
-  /* 美化滚动条 */
+  padding: 20px 24px 32px;
   scrollbar-width: thin;
   scrollbar-color: var(--border-subtle) transparent;
-  /* iOS 惯性滚动 */
   -webkit-overflow-scrolling: touch;
 }
 
@@ -724,7 +725,6 @@ body {
   font-weight: 700;
   color: var(--text-primary);
   margin-bottom: 20px;
-  /* title 不参与滚动，固定在顶部 */
   flex-shrink: 0;
   padding: 16px 24px 0;
 }
@@ -732,6 +732,7 @@ body {
 /* ============================================================
    区块结束：弹窗 (Modal)
    ============================================================ */
+
 
 
 /* ============================================================

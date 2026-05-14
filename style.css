@@ -4329,3 +4329,63 @@ body {
 /* ============================================================
    区块结束：宠物深化 - 拓麻歌子增强 & 饮食 & 健康
    ============================================================ */
+   /* ============================================================
+   区块开始：Todo Checkbox 样式
+   ============================================================ */
+
+/* todo 完成态整体变淡 */
+.todo-item.done {
+  opacity: 0.55;
+}
+
+.todo-item.done .course-item-title {
+  text-decoration: line-through;
+  color: var(--text-tertiary);
+}
+
+/* checkbox 容器 */
+.todo-check-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  padding: 4px;
+  margin-left: 2px;
+}
+
+/* checkbox 圆圈 */
+.todo-checkbox {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--border-color);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s cubic-bezier(.4,0,.2,1);
+  flex-shrink: 0;
+}
+
+.todo-checkbox svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* 已完成态 */
+.todo-checkbox.checked {
+  background: #34d399;
+  border-color: #34d399;
+}
+
+/* hover 预览 */
+.todo-check-label:hover .todo-checkbox:not(.checked) {
+  border-color: #34d399;
+  background: rgba(52, 211, 153, 0.12);
+}
+
+/* ============================================================
+   区块结束：Todo Checkbox 样式
+   ============================================================ */
+

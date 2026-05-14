@@ -707,33 +707,10 @@ function renderDayCourses() {
     </div>`;
   });
 
-  // 课程
-  courses.forEach(c => {
-    const peopleTag = (c.people && c.people.length > 0)
-      ? `<span class="course-people-tag">👥 ${c.people.join(', ')}</span>` : '';
-    const todoCount = (c.courseTodos && c.courseTodos.length > 0)
-      ? `<span class="course-todo-tag">📝 ${c.courseTodos.filter(t=>t.done).length}/${c.courseTodos.length}</span>` : '';
-    const conflictMark = checkSingleConflict(c) ? '<span class="conflict-badge">⚠️冲突</span>' : '';
-
-    html += `<div class="course-item glass ${batchMode ? 'batch-selectable' : ''} ${batchSelected.has(c.id) ? 'batch-selected' : ''}" data-id="${c.id}">
-      ${batchMode ? `<label class="batch-checkbox"><input type="checkbox" ${batchSelected.has(c.id) ? 'checked' : ''} onchange="toggleBatchSelect('${c.id}', this.checked)"><span class="batch-checkmark"></span></label>` : ''}
-      <div class="course-item-color color-bg-${c.color || 'blue'}"></div>
-      <div class="course-item-body" ${!batchMode ? `onclick="showCourseDetailPanel('${c.id}')"` : ''}>
-        <div class="course-item-title">${c.title} ${conflictMark}</div>
-        <div class="course-item-sub">${c.startTime} - ${c.endTime}${c.location ? ' · ' + c.location : ''}</div>
-        ${(peopleTag || todoCount) ? `<div class="course-item-tags">${peopleTag}${todoCount}</div>` : ''}
-      </div>${!batchMode ? `<div class="course-item-actions">
-        <button class="course-action-btn" onclick="copyCourse('${c.id}')" aria-label="复制" title="复制到其他日期">📋</button>
-        <button class="course-action-btn" onclick="editCourse('${c.id}')" aria-label="编辑">✏️</button>
-        <button class="course-action-btn" onclick="deleteCourse('${c.id}')" aria-label="删除">🗑️</button>
-      </div>` : ''}
-    </div>`;
-  });
-
-   // 待办
+    // 待办
   todos.forEach(t => {
     const priorityColors = { high: '#ef4444', medium: '#f59e0b', low: '#22c55e' };
-    const priorityLabel  = { high: '高',      medium: '中',      low: '低' };
+    const priorityLabel  = { high: '高', medium: '中', low: '低' };
     const isEvent = /^\[[\d:]+/.test(t.text);
     const subText = isEvent ? '日程事件' : ('优先级：' + (priorityLabel[t.priority] || '中'));
     const checkIcon = t.done
@@ -741,73 +718,17 @@ function renderDayCourses() {
       : '';
 
     html += '<div class="course-item todo-item glass ' + (t.done ? 'done' : '') + '" data-id="' + t.id + '">'
-      + '<div class="course-item-color" style="background:' + (priorityColors[t.priority] || '#f59e0b') + '"></div>'
-      + '<label class="todo-check-label" onclick="toggleTodo(\'' + t.id + '\')">'
-      + '  <span class="todo-checkbox ' + (t.done ? 'checked' : '') + '" aria-hidden="true">' + checkIcon + '</span>'
-      + '</label>'
-      + '<div class="course-item-body" onclick="toggleTodo(\'' + t.id + '\')" style="cursor:pointer">'
-      + '  <div class="course-item-title ' + (t.done ? 'line-through' : '') + '">' + t.text + '</div>'
-      + '  <div class="course-item-sub">' + subText + '</div>'
-      + '</div>'
-      + '<button class="course-action-btn" onclick="deleteTodo(\'' + t.id + '\')" aria-label="删除">🗑️</button>'
-      + '</div>';
+          +   '<div class="course-item-color" style="background:' + (priorityColors[t.priority] || '#f59e0b') + '"></div>'
+          +   '<label class="todo-check-label" onclick="toggleTodo(\'' + t.id + '\')">'
+          +     '<span class="todo-checkbox ' + (t.done ? 'checked' : '') + '" aria-hidden="true">' + checkIcon + '</span>'
+          +   '</label>'
+          +   '<div class="course-item-body" onclick="toggleTodo(\'' + t.id + '\')" style="cursor:pointer">'
+          +     '<div class="course-item-title ' + (t.done ? 'line-through' : '') + '">' + t.text + '</div>'
+          +     '<div class="course-item-sub">' + subText + '</div>'
+          +   '</div>'
+          +   '<button class="course-action-btn" onclick="deleteTodo(\'' + t.id + '\')" aria-label="删除">🗑️</button>'
+          + '</div>';
   });
-
-
-// 展开课程详情面板（含人员+课程Todo）
-function showCourseDetailPanel(id) {
-  const course = appData.courses.find(c => c.id === id);
-  if (!course) return;
-
-  // 创建详情面板
-  const existing = document.querySelector('.course-detail-panel');
-  if (existing) existing.remove();
-
-  const panel = document.createElement('div');
-  panel.className = 'course-detail-panel glass-card';
-
-  const people = (course.people && course.people.length > 0) ? course.people.join(', ') : '未设置';
-  const todosHtml = (course.courseTodos && course.courseTodos.length > 0)
-    ? course.courseTodos.map((t, i) =>
-        `<div class="course-todo-item ${t.done ? 'done' : ''}" onclick="toggleCourseTodo('${id}', ${i})">
-          <span>${t.done ? '✅' : '⬜'}</span>
-          <span class="${t.done ? 'line-through' : ''}">${t.text}</span>
-        </div>`
-      ).join('')
-    : '<div class="text-secondary" style="font-size:13px">暂无课程待办</div>';
-
-  panel.innerHTML = `
-    <div class="detail-panel-header">
-      <div class="detail-panel-title color-${course.color || 'blue'}-text">${course.title}</div>
-      <button class="icon-btn" onclick="this.closest('.course-detail-panel').remove()">✕</button>
-    </div>
-    <div class="detail-panel-info">
-      <div class="detail-row"><span>🕐</span><span>${course.startTime} - ${course.endTime}</span></div>
-      <div class="detail-row"><span>📍</span><span>${course.location || '未设置地点'}</span></div>
-      <div class="detail-row"><span>👥</span><span>${people}</span></div></div>
-    <div class="detail-panel-section">
-      <div class="detail-section-title">📝 课程待办</div>
-      <div class="detail-todo-list">${todosHtml}</div>
-    </div>
-    <div class="detail-panel-actions">
-      <button class="btn btn-secondary btn-sm" onclick="copyCourse('${id}')">📋 复制</button>
-      <button class="btn btn-secondary btn-sm" onclick="editCourse('${id}');document.querySelector('.course-detail-panel')?.remove()">✏️ 编辑</button>
-      <button class="btn btn-secondary btn-sm" onclick="deleteCourse('${id}');document.querySelector('.course-detail-panel')?.remove()" style="color:#ef4444">🗑️ 删除</button>
-    </div>
-  `;
-
-  $('day-courses-section').appendChild(panel);
-}
-
-// 切换课程内部待办
-function toggleCourseTodo(courseId, todoIndex) {
-  const course = appData.courses.find(c => c.id === courseId);
-  if (!course || !course.courseTodos || !course.courseTodos[todoIndex]) return;
-  course.courseTodos[todoIndex].done = !course.courseTodos[todoIndex].done;
-  saveData();
-  showCourseDetailPanel(courseId);
-  refreshCalendar();
-}
 
 /*============================================================
    区块结束：日历核心

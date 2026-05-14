@@ -1359,14 +1359,21 @@ function initAIImport() {
   });
 
   // 解析按钮
-  $('btn-ai-parse').addEventListener('click', async () => {
+    $('btn-ai-parse').addEventListener('click', async () => {
     const activeTab = document.querySelector('.ai-tab.active').dataset.aitab;
     if (activeTab === 'paste') {
-      parsePastedJSON();
+      // 自动判断：包含 COURSE| 或 EVENT| 就用正则解析，否则用 JSON 解析
+      const raw = $('input-paste-json').value.trim();
+      if (/^(COURSE|EVENT)\|/im.test(raw)) {
+        parsePlainText();
+      } else {
+        parsePastedJSON();
+      }
     } else {
       await parseWithAI();
     }
   });
+
 
   // 确认导入
   $('btn-ai-confirm').addEventListener('click', () => {
@@ -1445,6 +1452,54 @@ function parsePastedJSON() {
   } catch (e) {
     showToast('JSON 解析失败：' + e.message, 'error');
   }
+}
+function parsePlainText() {
+  const raw = $('input-paste-json').value.trim();
+  if (!raw) { showToast('请粘贴格式化文本', 'warning'); return; }
+
+  const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+  const results = [];
+
+  const courseReg = /^COURSE\|([^|]+)\|(\d{4}-\d{2}-\d{2})\|(\d{2}:\d{2})\|(\d{2}:\d{2})\|([^|]*)\|(blue|green|purple|coral|amber)$/i;
+  const eventReg  = /^EVENT\|([^|]+)\|(\d{4}-\d{2}-\d{2})\|(\d{2}:\d{2})?\|(\d{2}:\d{2})?\|([^|]*)$/i;
+
+  lines.forEach(line => {
+    let m;
+    if ((m = line.match(courseReg))) {
+      results.push({
+        type: 'course',
+        title: m[1].trim(),
+        date: m[2],
+        startTime: m[3],
+        endTime: m[4],
+        location: m[5].trim(),
+        color: m[6].toLowerCase()
+      });
+    } else if ((m = line.match(eventReg))) {
+      results.push({
+        type: 'event',
+        title: m[1].trim(),
+        date: m[2],
+        startTime: m[3] || '',
+        endTime: m[4] || '',
+        location: m[5] ? m[5].trim() : ''
+      });
+    }
+  });
+
+  if (results.length === 0) {
+    showToast('未识别到有效内容，请检查格式', 'warning');
+    return;
+  }
+
+  parsedCourses = results;
+  showPreview();
+  const courseN = results.filter(r => r.type === 'course').length;
+  const eventN  = results.filter(r => r.type === 'event').length;
+  const parts = [];
+  if (courseN > 0) parts.push(`${courseN} 节课程`);
+  if (eventN > 0)  parts.push(`${eventN} 个日程`);
+  showToast(`解析成功：${parts.join('、')}`);
 }
 
 async function parseWithAI() {

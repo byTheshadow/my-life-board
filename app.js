@@ -3187,20 +3187,36 @@ function refreshStats() {
 
   // 本月统计
   const monthStart = new Date(calendarYear, calendarMonth, 1);
-  const monthEnd = new Date(calendarYear, calendarMonth + 1, 0);
+  const monthEnd   = new Date(calendarYear, calendarMonth + 1, 0);
   let monthCourseCount = 0;
   for (let d = new Date(monthStart); d <= monthEnd; d.setDate(d.getDate() + 1)) {
     monthCourseCount += getCoursesForDate(formatDate(d)).length;
   }
 
   // 单词统计
-  const mastered = appData.vocab.filter(w => w.level >= EBBINGHAUS_INTERVALS.length).length;
+  const total     = appData.vocab.length;
+  const mastered  = appData.vocab.filter(w => w.level >= EBBINGHAUS_INTERVALS.length).length;
   const reviewing = appData.vocab.filter(w => w.level > 0 && w.level < EBBINGHAUS_INTERVALS.length).length;
-  const newWords = appData.vocab.filter(w => w.level === 0).length;
+  const learning  = total - mastered - reviewing;
+  const streak    = appData.vocabStats?.streak || 0;
+  const due       = total > 0
+    ? appData.vocab.filter(w => {
+        if (w.level >= EBBINGHAUS_INTERVALS.length) return false;
+        if (!w.lastReview) return true;
+        const next = new Date(w.lastReview);
+        next.setDate(next.getDate() + EBBINGHAUS_INTERVALS[w.level]);
+        return formatDate(next) <= todayStr;
+      }).length
+    : 0;
+
+  const pMastered  = total ? (mastered  / total * 100).toFixed(1) : 0;
+  const pReviewing = total ? (reviewing / total * 100).toFixed(1) : 0;
+  const pLearning  = total ? (learning  / total * 100).toFixed(1) : 0;
 
   content.innerHTML = `
-    <div style="padding:0 24px">
-      <!-- 周课时-->
+    <div style="padding:0 16px 100px">
+
+      <!-- 周课时 -->
       <div class="glass-card" style="padding:20px;margin-bottom:16px">
         <div class="stats-card-title">📅 本周课时统计</div>
         <div class="stats-big-num">${weekCourses.length}<span class="stats-unit">节课</span></div>
@@ -3214,11 +3230,13 @@ function refreshStats() {
               <span class="stats-bar-value">${hours.toFixed(1)}h</span>
             </div>
           `).join('')}
-          ${Object.keys(subjectMap).length === 0 ? '<div class="text-secondary" style="text-align:center;padding:20px">本周暂无课程</div>' : ''}
+          ${Object.keys(subjectMap).length === 0
+            ? '<div class="text-secondary" style="text-align:center;padding:20px">本周暂无课程</div>'
+            : ''}
         </div>
       </div>
 
-      <!-- 月统计 -->
+      <!-- 月概览 -->
       <div class="glass-card" style="padding:20px;margin-bottom:16px">
         <div class="stats-card-title">📊 本月概览</div>
         <div class="stats-grid">
@@ -3241,20 +3259,60 @@ function refreshStats() {
         </div>
       </div>
 
-      <!-- 单词进度 -->
+      <!-- 单词学习进度 -->
       <div class="glass-card" style="padding:20px;margin-bottom:16px">
-        <div class="stats-card-title">📖 单词学习进度</div>
-        <div class="vocab-progress-bar" style="margin:12px 0">
-          <div class="vocab-bar-fill mastered" style="width:${appData.vocab.length ? (mastered / appData.vocab.length * 100) : 0}%"></div>
-          <div class="vocab-bar-fill reviewing" style="width:${appData.vocab.length ? (reviewing / appData.vocab.length * 100) : 0}%"></div>
+
+        <!-- 标题行 -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div class="stats-card-title" style="margin-bottom:0">📖 单词学习进度</div>
+          <span class="vocab-streak-badge">🔥 ${streak} 天</span>
         </div>
-        <div class="vocab-progress-legend">
+
+        <!-- 四格数字概览 -->
+        <div class="stats-grid" style="margin-bottom:16px">
+          <div class="stats-item">
+            <div class="stats-item-value" style="color:var(--text-primary)">${total}</div>
+            <div class="stats-item-label">词库总量</div>
+          </div>
+          <div class="stats-item">
+            <div class="stats-item-value" style="color:#34d399">${mastered}</div>
+            <div class="stats-item-label">已掌握</div>
+          </div>
+          <div class="stats-item">
+            <div class="stats-item-value" style="color:#fbbf24">${reviewing}</div>
+            <div class="stats-item-label">复习中</div>
+          </div>
+          <div class="stats-item">
+            <div class="stats-item-value" style="color:${due > 0 ? '#f87171' : 'var(--text-primary)'}">${due}</div>
+            <div class="stats-item-label">今日待复习</div>
+          </div>
+        </div>
+
+        <!-- 进度条 -->
+        <div class="vocab-bar-track" style="margin-bottom:10px">
+          <div class="vocab-bar-seg mastered"  style="width:${pMastered}%"></div>
+          <div class="vocab-bar-seg reviewing" style="width:${pReviewing}%"></div>
+          <div class="vocab-bar-seg learning"  style="width:${pLearning}%"></div>
+        </div>
+
+        <!-- 图例 -->
+        <div class="vocab-stats-legend">
           <span><i style="background:#34d399"></i>已掌握 ${mastered}</span>
           <span><i style="background:#fbbf24"></i>复习中 ${reviewing}</span>
-          <span><i style="background:#94a3b8"></i>待学习 ${newWords}</span>
+          <span><i style="background:#94a3b8"></i>待学习 ${learning}</span>
         </div>
-        <div class="vocab-streak" style="margin-top:8px">🔥 连续打卡 ${appData.vocabStats.streak} 天</div>
+
+        <!-- 掌握率文字 -->
+        ${total > 0 ? `
+        <div style="margin-top:12px;font-size:12px;color:var(--text-tertiary);text-align:right">
+          掌握率 ${pMastered}%
+          ${due > 0
+            ? `· <span style="color:#f87171;font-weight:600">今日有 ${due} 个单词待复习</span>`
+            : `· <span style="color:#34d399;font-weight:600">今日复习已完成 ✅</span>`}
+        </div>` : ''}
+
       </div>
+
     </div>
   `;
 }
@@ -3262,6 +3320,7 @@ function refreshStats() {
 /* ============================================================
    区块结束：统计页面
    ============================================================ */
+
 
 /* ============================================================
    区块开始：设置管理

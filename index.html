@@ -203,7 +203,6 @@
   <!-- ============================================================
        区块结束：日历页 (Calendar)
        ============================================================ -->
-
 <!-- ============================================================
      区块开始：宠物页 (Pet)
      ============================================================ -->
@@ -211,121 +210,173 @@
   <div class="page-header">
     <div>
       <div class="page-header-title">宠物</div>
-      <div class="page-header-sub">我的毛孩子</div>
+      <div class="page-header-sub" id="pet-page-sub">我的毛孩子</div>
     </div>
-    <button class="icon-btn" id="btn-add-pet" aria-label="添加宠物">➕</button>
-  </div>
-  <div class="placeholder-page" id="pet-placeholder">
-    <span class="placeholder-icon">🐾</span>
-    <p>还没有添加宠物</p>
-    <button class="btn btn-primary" onclick="openModal('modal-add-pet')">添加第一只宠物</button>
-  </div>
-  <div id="pet-content" style="display:none">
-    <!-- 宠物类型切换：毛宠 / 爬宠 -->
-<div class="pet-type-switcher" id="pet-type-switcher">
-  <button class="pet-type-btn active" data-type="furry">🐾 毛宠</button>
-  <button class="pet-type-btn" data-type="reptile">🦎 爬宠</button>
-</div>
-    <!-- 宠物切换标签 -->
-    <div class="pet-tabs" id="pet-tabs"></div>
-
-    <!-- 拓麻歌子区域 -->
-    <div class="tama-zone glass-card" id="tama-zone">
-      <div class="tama-personality-bar" id="tama-personality-bar">
-        <span class="tama-personality-label" id="tama-personality-label">✨ 活泼</span>
-        <button class="tama-personality-btn" id="btn-change-personality" aria-label="切换性格">⚙️ 性格</button>
-      </div>
-      <div class="tama-pet" id="tama-pet">
-        <div class="tama-sprite-wrap" id="tama-sprite-wrap">
-          <div class="tama-sprite" id="tama-sprite"></div>
-          <div class="tama-particles" id="tama-particles"></div>
-        </div>
-        <div class="tama-bubble" id="tama-bubble" style="display:none">
-          <span id="tama-bubble-text"></span>
-          <span class="tama-bubble-cursor" id="tama-bubble-cursor"></span>
-        </div>
-      </div>
-      <div class="tama-chat-area" id="tama-chat-area" style="display:none">
-        <div class="tama-chat-messages" id="tama-chat-messages"></div>
-        <div class="tama-chat-input-row">
-          <input type="text" class="tama-chat-input" id="tama-chat-input"
-                 placeholder="和 TA 说点什么…" maxlength="100">
-          <button class="tama-chat-send" id="tama-chat-send" aria-label="发送">➤</button>
-        </div>
-      </div>
-      <div class="tama-stats" id="tama-stats">
-        <div class="tama-stat">
-          <span class="tama-stat-icon">🍖</span>
-          <div class="tama-stat-bar"><div class="tama-stat-fill hunger" id="tama-hunger" style="width:80%"></div></div>
-          <span class="tama-stat-val" id="tama-hunger-val">80</span>
-        </div>
-        <div class="tama-stat">
-          <span class="tama-stat-icon">💖</span>
-          <div class="tama-stat-bar"><div class="tama-stat-fill happy" id="tama-happy" style="width:65%"></div></div>
-          <span class="tama-stat-val" id="tama-happy-val">65</span>
-        </div>
-        <div class="tama-stat">
-          <span class="tama-stat-icon">🧼</span>
-          <div class="tama-stat-bar"><div class="tama-stat-fill clean" id="tama-clean" style="width:90%"></div></div>
-          <span class="tama-stat-val" id="tama-clean-val">90</span>
-        </div>
-      </div>
-      <div class="tama-actions">
-        <button class="tama-btn" id="btn-feed" aria-label="喂食">🍖<span>喂食</span></button>
-        <button class="tama-btn" id="btn-play" aria-label="玩耍">🎾<span>玩耍</span></button>
-        <button class="tama-btn" id="btn-clean" aria-label="梳毛">🧹<span>梳毛</span></button>
-        <button class="tama-btn" id="btn-tama-chat" aria-label="聊天">💬<span>聊天</span></button>
-      </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="icon-btn" id="btn-add-pet" aria-label="添加宠物">➕</button>
+      <button class="icon-btn" id="btn-add-reptile-header" aria-label="添加爬宠" style="display:none">🦎</button>
     </div>
-
-    <!-- 宠物信息卡 -->
-    <div class="pet-info-section" id="pet-info-section"></div>
-    <!-- 今日饮食 & 饮水 -->
-    <div class="pet-feed-section" id="pet-feed-section"></div>
-    <!-- 健康记录 -->
-    <div class="pet-health-section" id="pet-health-section"></div>
-  </div>
-  <!-- 爬宠区域（默认隐藏） -->
-<div id="reptile-content" style="display:none">
-  <!-- 爬宠标签切换 -->
-  <div class="pet-tabs" id="reptile-tabs"></div>
-
-  <!-- 环境监控卡 -->
-  <div class="reptile-env-section glass-card" id="reptile-env-section">
-    <div class="reptile-section-header">
-      <span>🌡️ 环境监控</span>
-      <button class="btn btn-primary btn-sm" id="btn-add-env-log">+ 记录</button>
-    </div>
-    <div class="env-grid" id="env-grid"></div>
-    <div class="env-chart-wrap" id="env-chart-wrap"></div>
   </div>
 
-  <!-- 喂食日志 -->
-  <div class="reptile-feed-section glass-card" id="reptile-feed-section">
-    <div class="reptile-section-header">
-      <span>🦗 喂食日志</span>
-      <button class="btn btn-primary btn-sm" id="btn-add-reptile-feed">+ 喂食</button>
-    </div>
-    <div id="reptile-feed-list"></div>
+  <!-- 物种类型切换器：始终可见，独立于两个内容区之外 -->
+  <div class="pet-type-switcher" id="pet-type-switcher">
+    <button class="pet-type-btn active" data-type="furry">🐾 毛宠</button>
+    <button class="pet-type-btn" data-type="reptile">🦎 爬宠</button>
   </div>
 
-  <!-- 健康追踪 -->
-  <div class="reptile-health-section glass-card" id="reptile-health-section">
-    <div class="reptile-section-header">
-      <span>📊 健康追踪</span>
-      <div style="display:flex;gap:6px">
-        <button class="btn btn-secondary btn-sm" id="btn-add-weight-reptile">⚖️ 体重</button>
-        <button class="btn btn-secondary btn-sm" id="btn-add-shed">🐍 蜕皮</button>
-        <button class="btn btn-secondary btn-sm" id="btn-add-defecation">💩 排泄</button>
+  <!-- ── 毛宠区域 ── -->
+  <div id="pet-content" style="display:block">
+    <div class="placeholder-page" id="pet-placeholder" style="display:none">
+      <span class="placeholder-icon">🐾</span>
+      <p>还没有添加宠物</p>
+      <button class="btn btn-primary" onclick="openModal('modal-add-pet')">添加第一只宠物</button>
+    </div>
+    <div id="pet-furry-main" style="display:none">
+      <!-- 宠物切换标签 -->
+      <div class="pet-tabs" id="pet-tabs"></div>
+      <!-- 拓麻歌子区域 -->
+      <div class="tama-zone glass-card" id="tama-zone">
+        <div class="tama-personality-bar" id="tama-personality-bar">
+          <span class="tama-personality-label" id="tama-personality-label">✨ 活泼</span>
+          <button class="tama-personality-btn" id="btn-change-personality" aria-label="切换性格">⚙️ 性格</button>
+        </div>
+        <div class="tama-pet" id="tama-pet">
+          <div class="tama-sprite-wrap" id="tama-sprite-wrap">
+            <div class="tama-sprite" id="tama-sprite"></div>
+            <div class="tama-particles" id="tama-particles"></div>
+          </div>
+          <div class="tama-bubble" id="tama-bubble" style="display:none">
+            <span id="tama-bubble-text"></span>
+            <span class="tama-bubble-cursor" id="tama-bubble-cursor"></span>
+          </div>
+        </div>
+        <div class="tama-chat-area" id="tama-chat-area" style="display:none">
+          <div class="tama-chat-messages" id="tama-chat-messages"></div>
+          <div class="tama-chat-input-row">
+            <input type="text" class="tama-chat-input" id="tama-chat-input"
+                   placeholder="和 TA 说点什么…" maxlength="100">
+            <button class="tama-chat-send" id="tama-chat-send" aria-label="发送">➤</button>
+          </div>
+        </div>
+        <div class="tama-stats" id="tama-stats">
+          <div class="tama-stat">
+            <span class="tama-stat-icon">🍖</span>
+            <div class="tama-stat-bar"><div class="tama-stat-fill hunger" id="tama-hunger" style="width:80%"></div></div>
+            <span class="tama-stat-val" id="tama-hunger-val">80</span>
+          </div>
+          <div class="tama-stat">
+            <span class="tama-stat-icon">💖</span>
+            <div class="tama-stat-bar"><div class="tama-stat-fill happy" id="tama-happy" style="width:65%"></div></div>
+            <span class="tama-stat-val" id="tama-happy-val">65</span>
+          </div>
+          <div class="tama-stat">
+            <span class="tama-stat-icon">🧼</span>
+            <div class="tama-stat-bar"><div class="tama-stat-fill clean" id="tama-clean" style="width:90%"></div></div>
+            <span class="tama-stat-val" id="tama-clean-val">90</span>
+          </div>
+        </div>
+        <div class="tama-actions">
+          <button class="tama-btn" id="btn-feed" aria-label="喂食">🍖<span>喂食</span></button>
+          <button class="tama-btn" id="btn-play" aria-label="玩耍">🎾<span>玩耍</span></button>
+          <button class="tama-btn" id="btn-clean" aria-label="梳毛">🧹<span>梳毛</span></button>
+          <button class="tama-btn" id="btn-tama-chat" aria-label="聊天">💬<span>聊天</span></button>
+        </div>
+      </div>
+      <!-- 宠物信息卡 -->
+      <div class="pet-info-section" id="pet-info-section"></div>
+      <!-- 今日饮食 & 饮水 -->
+      <div class="pet-feed-section" id="pet-feed-section"></div>
+      <!-- 健康记录 -->
+      <div class="pet-health-section" id="pet-health-section"></div>
+    </div>
+  </div>
+
+  <!-- ── 爬宠区域 ── -->
+  <div id="reptile-content" style="display:none">
+    <!-- 爬宠空状态（无爬宠时显示） -->
+    <div class="placeholder-page" id="reptile-placeholder" style="display:none">
+      <span class="placeholder-icon">🦎</span>
+      <p>还没有添加爬宠</p>
+      <button class="btn btn-primary" onclick="openModal('modal-add-reptile')">添加第一只爬宠</button>
+    </div>
+
+    <!-- 爬宠有数据时显示 -->
+    <div id="reptile-main" style="display:none">
+      <!-- 爬宠标签切换 -->
+      <div class="pet-tabs" id="reptile-tabs"></div>
+
+      <!-- 爬宠 AI 对话区 -->
+      <div class="tama-zone glass-card" id="reptile-tama-zone">
+        <div class="tama-personality-bar">
+          <span class="tama-personality-label" id="reptile-tama-label">🦎 爬宠伙伴</span>
+          <button class="tama-personality-btn" id="btn-reptile-chat-toggle" aria-label="聊天">💬 聊天</button>
+        </div>
+        <!-- 爬宠精灵展示 -->
+        <div class="tama-pet" id="reptile-tama-pet">
+          <div class="tama-sprite-wrap" id="reptile-sprite-wrap" style="cursor:default">
+            <div class="reptile-tama-sprite" id="reptile-tama-sprite"></div>
+          </div>
+          <div class="tama-bubble" id="reptile-tama-bubble" style="display:none">
+            <span id="reptile-bubble-text"></span>
+            <span class="tama-bubble-cursor"></span>
+          </div>
+        </div>
+        <!-- 爬宠 AI 聊天区 -->
+        <div class="tama-chat-area" id="reptile-chat-area" style="display:none">
+          <div class="tama-chat-messages" id="reptile-chat-messages"></div>
+          <div class="tama-chat-input-row">
+            <input type="text" class="tama-chat-input" id="reptile-chat-input"
+                   placeholder="和爬宠聊聊…" maxlength="100">
+            <button class="tama-chat-send" id="reptile-chat-send" aria-label="发送">➤</button>
+          </div>
+        </div>
+        <!-- 快捷操作 -->
+        <div class="tama-actions">
+          <button class="tama-btn" id="btn-reptile-feed-quick" aria-label="喂食">🦗<span>喂食</span></button>
+          <button class="tama-btn" id="btn-reptile-env-quick" aria-label="记录环境">🌡️<span>环境</span></button>
+          <button class="tama-btn" id="btn-reptile-health-quick" aria-label="健康">📊<span>健康</span></button>
+          <button class="tama-btn" id="btn-reptile-delete" aria-label="删除爬宠" style="color:#f87171">🗑️<span>删除</span></button>
+        </div>
+      </div>
+
+      <!-- 环境监控卡 -->
+      <div class="reptile-env-section glass-card" id="reptile-env-section">
+        <div class="reptile-section-header">
+          <span>🌡️ 环境监控</span>
+          <button class="btn btn-primary btn-sm" id="btn-add-env-log">+ 记录</button>
+        </div>
+        <div class="env-grid" id="env-grid"></div>
+        <div class="env-chart-wrap" id="env-chart-wrap"></div>
+      </div>
+
+      <!-- 喂食日志 -->
+      <div class="reptile-feed-section glass-card" id="reptile-feed-section">
+        <div class="reptile-section-header">
+          <span>🦗 喂食日志</span>
+          <button class="btn btn-primary btn-sm" id="btn-add-reptile-feed">+ 喂食</button>
+        </div>
+        <div id="reptile-feed-list"></div>
+      </div>
+
+      <!-- 健康追踪 -->
+      <div class="reptile-health-section glass-card" id="reptile-health-section">
+        <div class="reptile-section-header">
+          <span>📊 健康追踪</span>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-secondary btn-sm" id="btn-add-weight-reptile">⚖️ 体重</button>
+            <button class="btn btn-secondary btn-sm" id="btn-add-shed">🐍 蜕皮</button>
+            <button class="btn btn-secondary btn-sm" id="btn-add-defecation">💩 排泄</button>
+          </div>
+        </div>
+        <div id="reptile-health-list"></div>
       </div>
     </div>
-    <div id="reptile-health-list"></div>
   </div>
-</div>
 </div>
 <!-- ============================================================
      区块结束：宠物页 (Pet)
      ============================================================ -->
+
 <!-- ============================================================
      区块开始：弹窗 - 饮食记录
      ============================================================ -->

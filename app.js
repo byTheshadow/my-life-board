@@ -3268,6 +3268,15 @@ function appendReptileChatMsg(role, text, idOrReptile, reptile) {
 }
 let currentReptileType  = 'furry';
 let currentReptileIndex = 0;
+const REPTILE_SPECIES_CONFIG = {
+  leopard_gecko:   { label: '豹纹守宫',   emoji: '🦎' },
+  crested_gecko:   { label: '睫角守宫',   emoji: '🦎' },
+  ball_python:     { label: '球蟒',       emoji: '🐍' },
+  corn_snake:      { label: '玉米蛇',     emoji: '🐍' },
+  bearded_dragon:  { label: '胡子龙',     emoji: '🦖' },
+  blue_tongue:     { label: '蓝舌蜥',     emoji: '🦎' },
+  other:           { label: '其他爬宠',   emoji: '🦎' }
+};
 
 //── 物种类型切换 ──────────────────────────────────────────────
 function initPetTypeSwitcher() {

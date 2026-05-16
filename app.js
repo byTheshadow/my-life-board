@@ -2612,40 +2612,323 @@ function animateTama(type) {
 /* ============================================================
    区块结束：宠物管理
    ============================================================ */
-   /* ============================================================
-   区块开始：爬宠管理模块
+ /* ============================================================
+   区块开始：爬宠管理模块（完整重写）
    ============================================================ */
-   // ── 爬宠性格配置 ──────────────────────────────────────────────
+
+// ── 爬宠状态系统 ──────────────────────────────────────────────
+function getReptileState(reptileId) {
+  if (!appData.reptileStates) appData.reptileStates = {};
+  if (!appData.reptileStates[reptileId]) {
+    appData.reptileStates[reptileId] = {
+      satiety: 80,      // 饱食度 0-100，喂食+，随时间缓慢降
+      comfort: 75,      // 环境舒适度 0-100，记录环境+，随时间缓慢降
+      digestion: 90,    // 消化状态 0-100，排泄记录+，随时间缓慢降
+      lastUpdate: Date.now()
+    };
+    saveData();
+  }
+  const state   = appData.reptileStates[reptileId];
+  const elapsed = (Date.now() - state.lastUpdate) / 1000 / 60; // 分钟
+  // 爬宠代谢慢：每分钟衰减约 0.008（约 3 天降到 0）
+  const decay   = elapsed * 0.008;
+  state.satiety   = Math.max(0, state.satiety   - decay * 1.0);
+  state.comfort   = Math.max(0, state.comfort   - decay * 0.6);
+  state.digestion = Math.max(0, state.digestion - decay * 0.4);
+  state.lastUpdate = Date.now();
+  saveData();
+  return state;
+}
+
+// ── 渲染爬宠状态条 ────────────────────────────────────────────
+function renderReptileStats(reptile) {
+  const state = getReptileState(reptile.id);
+  const sv = Math.round(state.satiety);
+  const cv = Math.round(state.comfort);
+  const dv = Math.round(state.digestion);
+
+  const statsEl = $('reptile-tama-stats');
+  if (!statsEl) return;
+
+  statsEl.innerHTML = ''
+    + '<div class="tama-stat">'
+    +   '<span class="tama-stat-icon">🦗</span>'
+    +   '<div class="tama-stat-bar"><div class="tama-stat-fill hunger' + (sv < 30 ? ' low' : '') + '" id="reptile-stat-satiety" style="width:' + sv + '%"></div></div>'
+    +   '<span class="tama-stat-val" id="reptile-stat-satiety-val">' + sv + '</span>'
+    + '</div>'
+    + '<div class="tama-stat">'
+    +   '<span class="tama-stat-icon">🌡️</span>'
+    +   '<div class="tama-stat-bar"><div class="tama-stat-fill happy' + (cv < 30 ? ' low' : '') + '" id="reptile-stat-comfort" style="width:' + cv + '%"></div></div>'
+    +   '<span class="tama-stat-val" id="reptile-stat-comfort-val">' + cv + '</span>'
+    + '</div>'
+    + '<div class="tama-stat">'
+    +   '<span class="tama-stat-icon">💩</span>'
+    +   '<div class="tama-stat-bar"><div class="tama-stat-fill clean' + (dv < 30 ? ' low' : '') + '" id="reptile-stat-digestion" style="width:' + dv + '%"></div></div>'
+    +   '<span class="tama-stat-val" id="reptile-stat-digestion-val">' + dv + '</span>'
+    + '</div>';
+
+  // 根据状态更新气泡
+  updateReptileBubble(reptile, state);
+}
+
+// ── 爬宠气泡 ──────────────────────────────────────────────────
+function updateReptileBubble(reptile, state) {
+  const pConfig = getReptilePersonalityConfig(reptile);
+  let text;
+  if (state.satiety < 30) {
+    text = '……肚子有点空了。';
+  } else if (state.comfort < 30) {
+    text = '……环境不太对劲。';
+  } else if (state.digestion < 30) {
+    text = '……消化有点慢。';
+  } else {
+    const phrases = pConfig.idlePhrases;
+    text = phrases[Math.floor(Math.random() * phrases.length)];
+  }
+  const bubble = $('reptile-tama-bubble');
+  const textEl = $('reptile-bubble-text');
+  if (bubble && textEl) {
+    bubble.style.display = 'block';
+    typewriterBubble(textEl, text, 55);
+  }
+}
+
+// ── 初始化 ────────────────────────────────────────────────────
+function initReptile() {
+  initPetTypeSwitcher();
+
+  // ── 添加爬宠 ──
+  const saveBtn = $('btn-save-reptile');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', () => {
+      const name = $('input-reptile-name').value.trim();
+      if (!name) { showToast('请输入爬宠名字', 'warning'); return; }
+      showToast('正在保存…', 'info');
+      const reptile = {
+        id: generateId(), name,
+        species:  $('input-reptile-species').value,
+        gender:   $('input-reptile-gender').value,
+        birthday: $('input-reptile-birthday').value,
+        morph:    $('input-reptile-morph').value.trim(),
+        avatar:   '',
+        personality: 'calm',
+        envLogs: [], reptileFeedLogs: [], reptileWeights: [], shedLogs: [], defecLogs: []
+      };
+      if (!appData.reptiles) appData.reptiles = [];
+      appData.reptiles.push(reptile);
+      saveData();
+      closeModal('modal-add-reptile');
+      currentReptileType  = 'reptile';
+      currentReptileIndex = appData.reptiles.length - 1;
+      refreshPet();
+      showToast(escapeHtml(name) + ' 已添加 🦎', 'success');
+    });
+  }
+
+  // ── 编辑爬宠保存 ──
+  const saveEditBtn = $('btn-save-edit-reptile');
+  if (saveEditBtn) saveEditBtn.addEventListener('click', saveEditReptile);
+
+  // ── 编辑弹窗内删除按钮 ──
+  const deleteEditBtn = $('btn-delete-reptile-edit');
+  if (deleteEditBtn) {
+    deleteEditBtn.addEventListener('click', () => {
+      closeModal('modal-edit-reptile');
+      deleteReptile(currentReptileIndex);
+    });
+  }
+
+  // ── 性格弹窗：统一入口，感知 target ──
+  const savePersonalityBtn = $('btn-save-personality');
+  if (savePersonalityBtn) {
+    // 移除旧监听，用 onclick 覆盖（避免毛宠/爬宠冲突）
+    savePersonalityBtn.onclick = () => {
+      const grid = $('personality-grid');
+      const target = grid ? grid.dataset.target : 'furry';
+      if (target === 'reptile') {
+        saveReptilePersonality();
+      } else {
+        savePersonality(); // 原毛宠函数
+      }
+    };
+  }
+
+  // ── 环境记录保存 ──
+  const saveEnv = $('btn-save-env-log');
+  if (saveEnv) {
+    saveEnv.addEventListener('click', () => {
+      const r = (appData.reptiles || [])[currentReptileIndex];
+      if (!r) return;
+      const hot      = $('input-env-hot').value;
+      const cool     = $('input-env-cool').value;
+      const night    = $('input-env-night').value;
+      const humidity = $('input-env-humidity').value;
+      const note     = $('input-env-note').value.trim();
+      if (!hot && !cool && !humidity) { showToast('请至少填写一项数据', 'warning'); return; }
+      showToast('正在保存…', 'info');
+      if (!r.envLogs) r.envLogs = [];
+      r.envLogs.push({ id: generateId(), date: formatDate(new Date()), hot, cool, night, humidity, note });
+      // 记录环境 → 舒适度 +20
+      const state = getReptileState(r.id);
+      state.comfort = Math.min(100, state.comfort + 20);
+      saveData();
+      closeModal('modal-add-env-log');
+      renderEnvSection(r);
+      renderReptileStats(r);
+      showToast('环境数据已记录 🌡️', 'success');
+    });
+  }
+
+  // ── 喂食记录保存 ──
+  const saveFeed = $('btn-save-reptile-feed');
+  if (saveFeed) {
+    saveFeed.addEventListener('click', () => {
+      const r = (appData.reptiles || [])[currentReptileIndex];
+      if (!r) return;
+      const preyTab    = document.querySelector('#reptile-prey-tabs .seg-tab.active');
+      const suppTab    = document.querySelector('#reptile-supplement-tabs .seg-tab.active');
+      const prey       = preyTab ? preyTab.dataset.prey : '蟋蟀';
+      const supplement = suppTab ? suppTab.dataset.supp : '无';
+      const amount     = $('input-reptile-prey-amount').value.trim();
+      const accepted   = $('input-reptile-feed-accepted').value;
+      const gutload    = $('input-reptile-gutload').value.trim();
+      const note       = $('input-reptile-feed-note').value.trim();
+      if (!amount) { showToast('请填写数量/大小', 'warning'); return; }
+      showToast('正在保存…', 'info');
+      if (!r.reptileFeedLogs) r.reptileFeedLogs = [];
+      r.reptileFeedLogs.push({ id: generateId(), date: formatDate(new Date()), prey, amount, accepted, supplement, gutload, note });
+      // 喂食成功 → 饱食度 +30；拒食只 +5
+      const state = getReptileState(r.id);
+      state.satiety = Math.min(100, state.satiety + (accepted === '拒食' ? 5 : 30));
+      saveData();
+      closeModal('modal-add-reptile-feed');
+      renderReptileFeedSection(r);
+      renderReptileStats(r);
+      showToast('喂食记录已保存 🦗', 'success');
+    });
+  }
+
+  // ── seg-tab 点击 ──
+  document.addEventListener('click', e => {
+    const tab = e.target.closest('#reptile-prey-tabs .seg-tab, #reptile-supplement-tabs .seg-tab');
+    if (!tab) return;
+    tab.parentElement.querySelectorAll('.seg-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+  });
+
+  // ── 蜕皮记录保存 ──
+  const saveShed = $('btn-save-shed');
+  if (saveShed) {
+    saveShed.addEventListener('click', () => {
+      const r = (appData.reptiles || [])[currentReptileIndex];
+      if (!r) return;
+      const date     = $('input-shed-date').value;
+      const complete = $('input-shed-complete').value;
+      const note     = $('input-shed-note').value.trim();
+      if (!date) { showToast('请选择日期', 'warning'); return; }
+      showToast('正在保存…', 'info');
+      if (!r.shedLogs) r.shedLogs = [];
+      r.shedLogs.push({ id: generateId(), date, complete, note });
+      saveData();
+      closeModal('modal-add-shed');
+      renderReptileHealthSection(r);
+      showToast('蜕皮记录已保存 🐍', 'success');
+    });
+  }
+
+  // ── 排泄记录保存 ──
+  const saveDefec = $('btn-save-defecation');
+  if (saveDefec) {
+    saveDefec.addEventListener('click', () => {
+      const r = (appData.reptiles || [])[currentReptileIndex];
+      if (!r) return;
+      const date   = $('input-defec-date').value;
+      const status = $('input-defec-status').value;
+      const note   = $('input-defec-note').value.trim();
+      if (!date) { showToast('请选择日期', 'warning'); return; }
+      showToast('正在保存…', 'info');
+      if (!r.defecLogs) r.defecLogs = [];
+      r.defecLogs.push({ id: generateId(), date, status, note });
+      // 排泄记录 → 消化状态 +25
+      const state = getReptileState(r.id);
+      state.digestion = Math.min(100, state.digestion + 25);
+      saveData();
+      closeModal('modal-add-defecation');
+      renderReptileHealthSection(r);
+      renderReptileStats(r);
+      showToast('排泄记录已保存 💩', 'success');
+    });
+  }
+}
+
+// ── 保存爬宠性格 ──────────────────────────────────────────────
+function saveReptilePersonality() {
+  const reptile = (appData.reptiles || [])[currentReptileIndex];
+  if (!reptile) return;
+
+  const selected = document.querySelector('#personality-grid .personality-card.selected');
+  if (!selected) { showToast('请选择一个性格', 'warning'); return; }
+
+  const personality = selected.dataset.personality;
+  reptile.personality = personality;
+
+  if (personality === 'custom') {
+    const name   = $('input-custom-personality-name').value.trim();
+    const emoji  = $('input-custom-personality-emoji').value.trim();
+    const prompt = $('input-custom-personality-prompt').value.trim();
+    const idle   = $('input-custom-idle-phrases').value.trim();
+    const hungry = $('input-custom-hungry-phrases').value.trim();
+    if (!name || !prompt || !idle) {
+      showToast('请填写性格名称、提示词和日常台词', 'warning');
+      return;
+    }
+    reptile.customPersonality = {
+      name, emoji: emoji || '🦎',
+      prompt,
+      idlePhrases:   idle.split('\n').map(s => s.trim()).filter(Boolean),
+      hungryPhrases: hungry.split('\n').map(s => s.trim()).filter(Boolean)
+    };
+  }
+
+  saveData();
+  closeModal('modal-pet-personality');
+  // 重置 grid target，避免影响毛宠
+  const grid = $('personality-grid');
+  if (grid) grid.dataset.target = 'furry';
+  renderReptileContent();
+  showToast('性格已更新 🎭', 'success');
+}
+// ── 爬宠性格配置 ──────────────────────────────────────────────
 const REPTILE_PERSONALITY_CONFIG = {
   calm: {
     label: '淡定', emoji: '🦎',
-    idlePhrases:   ['……', '我在观察你。', '安静就是我的语言。', '今天的灯光不错。'],
-    systemPrompt:  '你是一只淡定冷静的爬宠，话很少，但每句话都很有分量。用第一人称"我"说话，简短克制，不超过40字，不用标点堆砌。'
+    idlePhrases:  ['……', '我在观察你。', '安静就是我的语言。', '今天的灯光不错。'],
+    systemPrompt: '你是一只淡定冷静的爬宠，话很少，但每句话都很有分量。用第一人称"我"说话，简短克制，不超过40字，不用标点堆砌。'
   },
   curious: {
     label: '好奇', emoji: '👀',
-    idlePhrases:   ['那是什么？', '我想出去看看。', '你手里拿的是什么？', '这个角落我还没探索过。'],
-    systemPrompt:  '你是一只充满好奇心的爬宠，对一切都感兴趣，喜欢提问。用第一人称"我"说话，简短活泼，不超过50字。'
+    idlePhrases:  ['那是什么？', '我想出去看看。', '你手里拿的是什么？', '这个角落我还没探索过。'],
+    systemPrompt: '你是一只充满好奇心的爬宠，对一切都感兴趣，喜欢提问。用第一人称"我"说话，简短活泼，不超过50字。'
   },
   shy: {
     label: '怕生', emoji: '🫣',
-    idlePhrases:   ['……（躲进躲出）', '你…你不要靠太近…', '我只是有点怕陌生人…', '……（偷偷看你）'],
-    systemPrompt:  '你是一只有点怕生的爬宠，说话吞吞吐吐，但对主人慢慢放开了心。用第一人称"我"说话，简短，带点羞涩，不超过40字。'
+    idlePhrases:  ['……（躲进躲出）', '你…你不要靠太近…', '我只是有点怕陌生人…', '……（偷偷看你）'],
+    systemPrompt: '你是一只有点怕生的爬宠，说话吞吞吐吐，但对主人慢慢放开了心。用第一人称"我"说话，简短，带点羞涩，不超过40字。'
   },
   ancient: {
     label: '老灵魂', emoji: '🧙',
-    idlePhrases:   ['岁月静好。', '我见过很多事了。', '慢下来，感受一下。', '时间是最好的答案。'],
-    systemPrompt:  '你是一只有着老灵魂的爬宠，说话像智者，偶尔说出很有哲理的话。用第一人称"我"说话，简短深沉，不超过50字。'
+    idlePhrases:  ['岁月静好。', '我见过很多事了。', '慢下来，感受一下。', '时间是最好的答案。'],
+    systemPrompt: '你是一只有着老灵魂的爬宠，说话像智者，偶尔说出很有哲理的话。用第一人称"我"说话，简短深沉，不超过50字。'
   },
   foodie: {
     label: '吃货', emoji: '🦗',
-    idlePhrases:   ['下次喂食是什么时候？', '我在想蟋蟀的味道。', '肚子有点空空的。', '食物是最重要的事。'],
-    systemPrompt:  '你是一只满脑子都是食物的爬宠，对吃的事情特别敏感，说话经常绕回食物话题。用第一人称"我"说话，简短，不超过50字。'
+    idlePhrases:  ['下次喂食是什么时候？', '我在想蟋蟀的味道。', '肚子有点空空的。', '食物是最重要的事。'],
+    systemPrompt: '你是一只满脑子都是食物的爬宠，对吃的事情特别敏感，说话经常绕回食物话题。用第一人称"我"说话，简短，不超过50字。'
   },
   custom: {
     label: '自定义', emoji: '✏️',
-    idlePhrases:   ['……'],
-    systemPrompt:  '你是一只爬宠。'
+    idlePhrases:  ['……'],
+    systemPrompt: '你是一只爬宠。'
   }
 };
 
@@ -2653,10 +2936,10 @@ function getReptilePersonalityConfig(reptile) {
   if (reptile.personality === 'custom' && reptile.customPersonality) {
     const cp = reptile.customPersonality;
     return {
-      label:        cp.name   || '自定义',
-      emoji:        cp.emoji  || '🦎',
+      label:        cp.name        || '自定义',
+      emoji:        cp.emoji       || '🦎',
       idlePhrases:  cp.idlePhrases || ['……'],
-      systemPrompt: cp.prompt || '你是一只爬宠，用第一人称"我"说话，简短，不超过50字。'
+      systemPrompt: cp.prompt      || '你是一只爬宠，用第一人称"我"说话，简短，不超过50字。'
     };
   }
   return REPTILE_PERSONALITY_CONFIG[reptile.personality] || REPTILE_PERSONALITY_CONFIG.calm;
@@ -2666,12 +2949,8 @@ function getReptilePersonalityConfig(reptile) {
 function openReptilePersonalityModal() {
   const reptile = (appData.reptiles || [])[currentReptileIndex];
   if (!reptile) return;
-
-  // 复用毛宠的 personality-grid，但替换内容为爬宠性格
   const grid = $('personality-grid');
   if (!grid) return;
-
-  // 临时替换 grid 内容为爬宠性格卡片
   grid.innerHTML = Object.entries(REPTILE_PERSONALITY_CONFIG).map(function(entry) {
     const key = entry[0];
     const cfg = entry[1];
@@ -2683,11 +2962,7 @@ function openReptilePersonalityModal() {
       + '<span>' + (isCustom ? '完全自己设定' : cfg.idlePhrases[0]) + '</span>'
       + '</button>';
   }).join('');
-
-  // 标记当前弹窗服务的是爬宠
   grid.dataset.target = 'reptile';
-
-  // 自定义面板
   const panel = $('custom-personality-panel');
   if (panel) {
     if (reptile.personality === 'custom' && reptile.customPersonality) {
@@ -2695,74 +2970,14 @@ function openReptilePersonalityModal() {
       $('input-custom-personality-name').value   = cp.name   || '';
       $('input-custom-personality-emoji').value  = cp.emoji  || '';
       $('input-custom-personality-prompt').value = cp.prompt || '';
-      $('input-custom-idle-phrases').value       = (cp.idlePhrases || []).join('\n');
+      $('input-custom-idle-phrases').value       = (cp.idlePhrases   || []).join('\n');
       $('input-custom-hungry-phrases').value     = (cp.hungryPhrases || []).join('\n');
       panel.style.display = 'block';
     } else {
       panel.style.display = 'none';
     }
   }
-
   openModal('modal-pet-personality');
-}
-
-// ── 保存爬宠性格（挂载到 btn-save-personality 的统一入口） ────
-// 原毛宠的 savePersonality 需要感知 grid.dataset.target
-// 在 initReptile 里重新绑定 btn-save-personality 的 click
-
-// ── 打开爬宠编辑弹窗 ──────────────────────────────────────────
-function openEditReptileModal() {
-  const reptile = (appData.reptiles || [])[currentReptileIndex];
-  if (!reptile) return;
-
-  $('edit-reptile-name').value    = reptile.name     || '';
-  $('edit-reptile-species').value = reptile.species  || 'other';
-  $('edit-reptile-gender').value  = reptile.gender   || 'unknown';
-  $('edit-reptile-birthday').value = reptile.birthday || '';
-  $('edit-reptile-morph').value   = reptile.morph    || '';
-  $('edit-reptile-note').value    = reptile.note     || '';
-  $('edit-reptile-avatar-url').value = reptile.avatar || '';
-
-  // 头像预览
-  previewReptileAvatar(reptile.avatar || '');
-
-  openModal('modal-edit-reptile');
-}
-
-// ── 头像预览（弹窗内实时预览） ────────────────────────────────
-function previewReptileAvatar(url) {
-  const wrap = $('reptile-avatar-preview');
-  if (!wrap) return;
-  if (url && url.trim()) {
-    wrap.innerHTML = '<img src="' + escapeHtml(url.trim()) + '" alt="头像预览" onerror="this.parentElement.innerHTML=\'🦎\'">';
-  } else {
-    const reptile = (appData.reptiles || [])[currentReptileIndex];
-    const config  = reptile ? (REPTILE_SPECIES_CONFIG[reptile.species] || REPTILE_SPECIES_CONFIG.other) : { emoji: '🦎' };
-    wrap.innerHTML = config.emoji || '🦎';
-  }
-}
-
-// ── 保存爬宠编辑 ──────────────────────────────────────────────
-function saveEditReptile() {
-  const reptile = (appData.reptiles || [])[currentReptileIndex];
-  if (!reptile) return;
-  const name = $('edit-reptile-name').value.trim();
-  if (!name) { showToast('名字不能为空', 'warning'); return; }
-
-  showToast('正在保存…', 'info');
-  reptile.name     = name;
-  reptile.species  = $('edit-reptile-species').value;
-  reptile.gender   = $('edit-reptile-gender').value;
-  reptile.birthday = $('edit-reptile-birthday').value;
-  reptile.morph    = $('edit-reptile-morph').value.trim();
-  reptile.note     = $('edit-reptile-note').value.trim();
-  const avatarUrl  = $('edit-reptile-avatar-url').value.trim();
-  reptile.avatar   = avatarUrl || '';
-
-  saveData();
-  closeModal('modal-edit-reptile');
-  renderReptileContent();
-  showToast(escapeHtml(name) + ' 的信息已更新 ✅', 'success');
 }
 
 // ── 爬宠基本信息渲染 ──────────────────────────────────────────
@@ -2771,31 +2986,20 @@ function renderReptileInfo(reptile) {
   const pConfig    = getReptilePersonalityConfig(reptile);
   const genderText = { male: '♂ 公', female: '♀ 母', unknown: '未知' };
   const age        = reptile.birthday ? calculateAge(reptile.birthday) : '未知';
-
-  // 精灵区：有头像显示图片，无头像显示物种 emoji
-  const spriteEl = $('reptile-tama-sprite');
+  const spriteEl   = $('reptile-tama-sprite');
   if (spriteEl) {
     if (reptile.avatar) {
-      spriteEl.innerHTML = '<img src="' + escapeHtml(reptile.avatar) + '" class="reptile-tama-avatar" alt="' + escapeHtml(reptile.name) + '" onerror="this.parentElement.textContent=\'' + (config.emoji || '🦎') + '\'">';
+      spriteEl.innerHTML = '<img src="' + escapeHtml(reptile.avatar) + '" class="reptile-tama-avatar" alt="'
+        + escapeHtml(reptile.name) + '" onerror="this.parentElement.textContent=\''
+        + (config.emoji || '🦎') + '\'">';
     } else {
       spriteEl.textContent = config.emoji || '🦎';
     }
   }
-
-  // 标签行
   const labelEl = $('reptile-tama-label');
   if (labelEl) labelEl.textContent = pConfig.emoji + ' ' + escapeHtml(reptile.name);
-
-  // 性格按钮文字
-  const btnToggle = $('btn-reptile-chat-toggle');
-  // 不改按钮，只更新性格按钮（如果有独立性格按钮）
-  const personalityBtn = $('btn-reptile-personality');
-  if (personalityBtn) personalityBtn.textContent = pConfig.emoji + ' ' + pConfig.label;
-
-  // 信息卡
   const infoSection = $('reptile-info-section');
   if (!infoSection) return;
-
   infoSection.innerHTML = '<div class="section-title reptile-info-header">'
     + '<span class="reptile-info-header-title">📋 基本信息</span>'
     + '<div style="display:flex;gap:6px">'
@@ -2817,86 +3021,85 @@ function renderReptileInfo(reptile) {
     + '</div>';
 }
 
-
-const REPTILE_SPECIES_CONFIG = {
-  leopard_gecko: {
-    label: '豹纹守宫', emoji: '🦎',
-    hotZone: [28, 32], coolZone: [22, 26], nightTemp: [18, 22], humidity: [30, 40],
-    feedInterval: 2, shedInterval: 30, uvb: false, notes: '夜行性，无需UVB；热区可用陶瓷加热灯'
-  },
-  crested_gecko: {
-    label: '睫角守宫', emoji: '🦎',
-    hotZone: [22, 26], coolZone: [18, 22], nightTemp: [16, 20], humidity: [60, 80],
-    feedInterval: 2, shedInterval: 21, uvb: false, notes: '高湿度物种，每天喷水1-2次；夏季注意降温'
-  },
-  ball_python: {
-    label: '球蟒', emoji: '🐍',
-    hotZone: [30, 33], coolZone: [24, 27], nightTemp: [22, 24], humidity: [60, 80],
-    feedInterval: 7, shedInterval: 42, uvb: false, notes: '热点区域需35°C晒点；拒食率高，记录有助判断发情/蜕皮'
-  },
-  corn_snake: {
-    label: '玉米蛇', emoji: '🐍',
-    hotZone: [28, 30], coolZone: [20, 24], nightTemp: [18, 22], humidity: [40, 60],
-    feedInterval: 7, shedInterval: 35, uvb: false, notes: '耐寒性强，新手友好；幼体每5天喂一次'
-  },
-  bearded_dragon: {
-    label: '鬃狮蜥', emoji: '🦎',
-    hotZone: [38, 42], coolZone: [25, 30], nightTemp: [18, 22], humidity: [30, 40],
-    feedInterval: 1, shedInterval: 21, uvb: true, notes: '必须提供UVB；热区晒点需42°C+；每天补钙粉'
-  },
-  blue_tongue_skink: {
-    label: '蓝舌石龙子', emoji: '🦎',
-    hotZone: [35, 38], coolZone: [24, 28], nightTemp: [18, 22], humidity: [40, 60],
-    feedInterval: 3, shedInterval: 35, uvb: true, notes: '杂食性；蔬菜占食谱约50%'
-  },
-  other: {
-    label: '其他', emoji: '🦎',
-    hotZone: [28, 32], coolZone: [22, 26], nightTemp: [20, 22], humidity: [50, 70],
-    feedInterval: 3, shedInterval: 30, uvb: false, notes: '请根据物种实际需求调整参数'
+// ── 头像预览 ──────────────────────────────────────────────────
+function previewReptileAvatar(url) {
+  const wrap = $('reptile-avatar-preview');
+  if (!wrap) return;
+  if (url && url.trim()) {
+    wrap.innerHTML = '<img src="' + escapeHtml(url.trim()) + '" alt="头像预览" onerror="this.parentElement.innerHTML=\'🦎\'">';
+  } else {
+    const reptile = (appData.reptiles || [])[currentReptileIndex];
+    const config  = reptile ? (REPTILE_SPECIES_CONFIG[reptile.species] || REPTILE_SPECIES_CONFIG.other) : { emoji: '🦎' };
+    wrap.innerHTML = config.emoji || '🦎';
   }
-};
+}
 
-let currentReptileIndex = 0;
-let currentReptileType = 'furry'; // 'furry' | 'reptile'
+// ── 打开爬宠编辑弹窗 ──────────────────────────────────────────
+function openEditReptileModal() {
+  const reptile = (appData.reptiles || [])[currentReptileIndex];
+  if (!reptile) return;
+  $('edit-reptile-name').value       = reptile.name     || '';
+  $('edit-reptile-species').value    = reptile.species  || 'other';
+  $('edit-reptile-gender').value     = reptile.gender   || 'unknown';
+  $('edit-reptile-birthday').value   = reptile.birthday || '';
+  $('edit-reptile-morph').value      = reptile.morph    || '';
+  $('edit-reptile-note').value       = reptile.note     || '';
+  $('edit-reptile-avatar-url').value = reptile.avatar   || '';
+  previewReptileAvatar(reptile.avatar || '');
+  openModal('modal-edit-reptile');
+}
 
-// ── 物种类型切换 ──────────────────────────────────────────────
-// ── 物种类型切换 ──────────────────────────────────────────────
-function initPetTypeSwitcher() {
-  const switcher = $('pet-type-switcher');
-  if (!switcher) return;
-  // 防止重复绑定
-  if (switcher._bound) return;
-  switcher._bound = true;
-  switcher.addEventListener('click', e => {
-    const btn = e.target.closest('.pet-type-btn');
-    if (!btn) return;
-    currentReptileType = btn.dataset.type;
-    refreshPet();
-  });
+// ── 保存爬宠编辑 ──────────────────────────────────────────────
+function saveEditReptile() {
+  const reptile = (appData.reptiles || [])[currentReptileIndex];
+  if (!reptile) return;
+  const name = $('edit-reptile-name').value.trim();
+  if (!name) { showToast('名字不能为空', 'warning'); return; }
+  showToast('正在保存…', 'info');
+  reptile.name     = name;
+  reptile.species  = $('edit-reptile-species').value;
+  reptile.gender   = $('edit-reptile-gender').value;
+  reptile.birthday = $('edit-reptile-birthday').value;
+  reptile.morph    = $('edit-reptile-morph').value.trim();
+  reptile.note     = $('edit-reptile-note').value.trim();
+  reptile.avatar   = $('edit-reptile-avatar-url').value.trim();
+  saveData();
+  closeModal('modal-edit-reptile');
+  renderReptileContent();
+  showToast(escapeHtml(name) + ' 的信息已更新 ✅', 'success');
+}
+
+// ── 删除整只爬宠 ──────────────────────────────────────────────
+function deleteReptile(index) {
+  const reptile = (appData.reptiles || [])[index];
+  if (!reptile) return;
+  if (!confirm('确定要删除「' + reptile.name + '」吗？所有记录将一并删除，此操作不可撤销。')) return;
+  if (appData.reptileStates) delete appData.reptileStates[reptile.id];
+  appData.reptiles.splice(index, 1);
+  currentReptileIndex = Math.max(0, appData.reptiles.length - 1);
+  saveData();
+  showToast(escapeHtml(reptile.name) + ' 已删除', 'info');
+  renderReptileContent();
 }
 
 // ── 主渲染入口 ────────────────────────────────────────────────
 function renderReptileContent() {
   const reptiles = appData.reptiles || [];
-
   if (reptiles.length === 0) {
     $('reptile-placeholder').style.display = 'flex';
     $('reptile-main').style.display = 'none';
     return;
   }
-
   $('reptile-placeholder').style.display = 'none';
   $('reptile-main').style.display = 'block';
-
   if (currentReptileIndex >= reptiles.length) currentReptileIndex = 0;
-
-  // 渲染爬宠 tab
   const tabs = $('reptile-tabs');
   if (tabs) {
     tabs.innerHTML = reptiles.map(function(r, i) {
       const emoji       = (REPTILE_SPECIES_CONFIG[r.species] && REPTILE_SPECIES_CONFIG[r.species].emoji) || '🦎';
       const activeClass = i === currentReptileIndex ? ' active' : '';
-      return '<button class="pet-tab' + activeClass + '" data-index="' + i + '">' + emoji + ' ' + escapeHtml(r.name) + '</button>';
+      return '<button class="pet-tab' + activeClass + '" data-index="' + i + '">'
+        + emoji + ' ' + escapeHtml(r.name) + '</button>';
     }).join('');
     tabs.querySelectorAll('.pet-tab').forEach(function(tab) {
       tab.addEventListener('click', function() {
@@ -2905,17 +3108,13 @@ function renderReptileContent() {
       });
     });
   }
-
   const reptile = reptiles[currentReptileIndex];
   if (!reptile) return;
-
-  // 确保信息区容器存在（首次渲染时注入）
   const reptileMain = $('reptile-main');
-  if (!$('reptile-info-section')) {
+  if (reptileMain && !$('reptile-info-section')) {
     const infoDiv = document.createElement('div');
     infoDiv.id = 'reptile-info-section';
     infoDiv.className = 'pet-info-section';
-    // 插入到 tama-zone 之后
     const tamaZone = $('reptile-tama-zone');
     if (tamaZone && tamaZone.nextSibling) {
       reptileMain.insertBefore(infoDiv, tamaZone.nextSibling);
@@ -2923,26 +3122,24 @@ function renderReptileContent() {
       reptileMain.appendChild(infoDiv);
     }
   }
-
-  // 渲染基本信息（含头像、性格）
   renderReptileInfo(reptile);
-
-  // 绑定快捷操作按钮
+  renderReptileStats(reptile);
   const btnFeedQuick = $('btn-reptile-feed-quick');
   if (btnFeedQuick) btnFeedQuick.onclick = function() { openModal('modal-add-reptile-feed'); };
-
   const btnEnvQuick = $('btn-reptile-env-quick');
   if (btnEnvQuick) btnEnvQuick.onclick = function() { openModal('modal-add-env-log'); };
-
   const btnHealthQuick = $('btn-reptile-health-quick');
   if (btnHealthQuick) btnHealthQuick.onclick = function() {
-    $('reptile-health-section').scrollIntoView({ behavior: 'smooth' });
+    const r = (appData.reptiles || [])[currentReptileIndex];
+    if (!r) return;
+    const state = getReptileState(r.id);
+    state.digestion = Math.min(100, state.digestion + 10);
+    saveData();
+    renderReptileStats(r);
+    showToast('健康状态已更新 📊', 'success');
   };
-
   const btnDeleteQuick = $('btn-reptile-delete');
   if (btnDeleteQuick) btnDeleteQuick.onclick = function() { deleteReptile(currentReptileIndex); };
-
-  // 绑定聊天切换
   const btnChatToggle = $('btn-reptile-chat-toggle');
   if (btnChatToggle) {
     btnChatToggle.onclick = function() {
@@ -2952,520 +3149,69 @@ function renderReptileContent() {
       btnChatToggle.classList.toggle('active', !isOpen);
       if (!isOpen) {
         $('reptile-chat-messages').innerHTML = '';
-        const pConfig   = getReptilePersonalityConfig(reptile);
-        const greeting  = pConfig.idlePhrases[Math.floor(Math.random() * pConfig.idlePhrases.length)];
+        const pConfig  = getReptilePersonalityConfig(reptile);
+        const greeting = pConfig.idlePhrases[Math.floor(Math.random() * pConfig.idlePhrases.length)];
         setTimeout(function() { appendReptileChatMsg('pet', greeting, reptile); }, 300);
       }
     };
   }
-
-  // 绑定聊天发送
   const sendBtn   = $('reptile-chat-send');
   const chatInput = $('reptile-chat-input');
-  if (sendBtn)   sendBtn.onclick   = function() { sendReptileChat(reptile); };
+  if (sendBtn)   sendBtn.onclick     = function() { sendReptileChat(reptile); };
   if (chatInput) chatInput.onkeydown = function(e) {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendReptileChat(reptile); }
   };
-
-  // 绑定区域按钮
-  bindReptileSectionBtns();
-
-  // 渲染各区域
+  const addEnv = $('btn-add-env-log');
+  if (addEnv) addEnv.onclick = function() { openModal('modal-add-env-log'); };
+  const addFeed = $('btn-add-reptile-feed');
+  if (addFeed) addFeed.onclick = function() { openModal('modal-add-reptile-feed'); };
+  const addWeight = $('btn-add-weight-reptile');
+  if (addWeight) addWeight.onclick = addReptileWeight;
+  const addShed = $('btn-add-shed');
+  if (addShed) addShed.onclick = function() {
+    $('input-shed-date').value = formatDate(new Date());
+    openModal('modal-add-shed');
+  };
+  const addDefec = $('btn-add-defecation');
+  if (addDefec) addDefec.onclick = function() {
+    $('input-defec-date').value = formatDate(new Date());
+    openModal('modal-add-defecation');
+  };
   renderEnvSection(reptile);
   renderReptileFeedSection(reptile);
   renderReptileHealthSection(reptile);
-}
-
-
-// ── 绑定区域按钮 ──────────────────────────────────────────────
-function bindReptileSectionBtns() {
-  const addEnv = $('btn-add-env-log');
-  if (addEnv) addEnv.addEventListener('click', () => openModal('modal-add-env-log'));
-
-  const addFeed = $('btn-add-reptile-feed');
-  if (addFeed) addFeed.addEventListener('click', () => openModal('modal-add-reptile-feed'));
-
-  const addWeight = $('btn-add-weight-reptile');
-  if (addWeight) addWeight.addEventListener('click', addReptileWeight);
-
-  const addShed = $('btn-add-shed');
-  if (addShed) addShed.addEventListener('click', () => {
-    $('input-shed-date').value = formatDate(new Date());
-    openModal('modal-add-shed');
-  });
-
-  const addDefec = $('btn-add-defecation');
-  if (addDefec) addDefec.addEventListener('click', () => {
-    $('input-defec-date').value = formatDate(new Date());
-    openModal('modal-add-defecation');
-  });
-}
-
-// ── 环境监控渲染 ──────────────────────────────────────────────
-function renderEnvSection(reptile) {
-  const envGrid = $('env-grid');
-  const chartWrap = $('env-chart-wrap');
-  if (!envGrid || !chartWrap) return;
-
-  const config = REPTILE_SPECIES_CONFIG[reptile.species] || REPTILE_SPECIES_CONFIG.other;
-  const logs = (reptile.envLogs || []).slice(-1)[0]; // 最新一条
-
-  const makeCell = (label, value, unit, min, max) => {
-    const num = parseFloat(value);
-    let status = 'normal';
-    if (!isNaN(num)) {
-      if (num < min) status = 'low';
-      else if (num > max) status = 'high';
-    }
-    const statusText = { normal: '✅ 正常', low: '❄️ 偏低', high: '🔥 偏高' };
-    return `<div class="env-cell glass ${status}">
-      <div class="env-cell-label">${label}</div>
-      <div class="env-cell-value">${value !== undefined && value !== '' ? value + unit : '--'}</div>
-      <div class="env-cell-range">${min}~${max}${unit}</div>
-      <div class="env-cell-status">${value !== undefined && value !== '' ? statusText[status] : '暂无数据'}</div>
-    </div>`;
-  };
-
-  envGrid.innerHTML = [
-    makeCell('🔥 热区', logs?.hot, '°C', config.hotZone[0], config.hotZone[1]),
-    makeCell('❄️ 冷区', logs?.cool, '°C', config.coolZone[0], config.coolZone[1]),
-    makeCell('🌙 夜间', logs?.night, '°C', config.nightTemp[0], config.nightTemp[1]),
-    makeCell('💧 湿度', logs?.humidity, '%', config.humidity[0], config.humidity[1])
-  ].join('');
-
-  // UVB 提示
-  const uvbTip = config.uvb
-    ? `<div class="reptile-tip tip-warn">☀️ <strong>${config.label}</strong> 需要 UVB 灯，建议 10-12h 光照周期</div>`
-    : '';
-  const speciesTip = `<div class="reptile-tip tip-info">💡 ${config.notes}</div>`;
-
-  // 温度曲线（近7条记录）
-  const recentLogs = (reptile.envLogs || []).slice(-7);
-  let chartHtml = '';
-  if (recentLogs.length >= 2) {
-    const maxTemp = 45;
-    const points = recentLogs.map((l, i) => {
-      const x = (i / (recentLogs.length - 1)) * 100;
-      const yHot = 100 - (parseFloat(l.hot) / maxTemp) * 100;
-      const yCool = 100 - (parseFloat(l.cool) / maxTemp) * 100;
-      return { x, yHot, yCool, date: l.date };
-    });
-    const hotPath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.yHot}`).join(' ');
-    const coolPath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.yCool}`).join(' ');
-    chartHtml = `
-      <div class="env-chart-title">近期温度趋势</div>
-      <svg class="env-chart-svg" viewBox="0 0 100 60" preserveAspectRatio="none">
-        <path d="${hotPath}" fill="none" stroke="#f97316" stroke-width="1.5" vector-effect="non-scaling-stroke"/>
-        <path d="${coolPath}" fill="none" stroke="#60a5fa" stroke-width="1.5" vector-effect="non-scaling-stroke"/>
-        ${points.map(p => `
-          <circle cx="${p.x}" cy="${p.yHot}" r="2" fill="#f97316"/>
-          <circle cx="${p.x}" cy="${p.yCool}" r="2" fill="#60a5fa"/>
-        `).join('')}
-      </svg>
-      <div class="env-chart-legend">
-        <span><i style="background:#f97316"></i>热区</span>
-        <span><i style="background:#60a5fa"></i>冷区</span>
-      </div>`;
-  }
-
-  chartWrap.innerHTML = uvbTip + speciesTip + chartHtml;
-
-  // 加热设备检查提醒
-  const lastLog = (reptile.envLogs || []).slice(-1)[0];
-  if (lastLog) {
-    const daysSince = Math.floor((Date.now() - new Date(lastLog.date)) / 86400000);
-    if (daysSince > 3) {
-      chartWrap.innerHTML += `<div class="reptile-tip tip-warn">⚠️ 已 ${daysSince} 天未记录温湿度，请检查加热设备是否正常运行</div>`;
-    }
-  }
-}
-
-// ── 喂食日志渲染 ──────────────────────────────────────────────
-function renderReptileFeedSection(reptile) {
-  const list = $('reptile-feed-list');
-  if (!list) return;
-
-  const config = REPTILE_SPECIES_CONFIG[reptile.species] || REPTILE_SPECIES_CONFIG.other;
-  const feeds = (reptile.reptileFeedLogs || []).slice().reverse().slice(0, 10);
-  const lastFeed = (reptile.reptileFeedLogs || []).slice(-1)[0];
-
-  let tipHtml = '';
-  if (lastFeed) {
-    const daysSince = Math.floor((Date.now() - new Date(lastFeed.date)) / 86400000);
-    if (daysSince >= config.feedInterval) {
-      tipHtml = `<div class="reptile-tip tip-warn">⏰ 距上次喂食已 ${daysSince} 天，建议今天喂食</div>`;
-    } else {
-      tipHtml = `<div class="reptile-tip tip-ok">✅ ${daysSince} 天前已喂食，下次约 ${config.feedInterval - daysSince} 天后</div>`;
-    }
-    if (lastFeed.accepted === 'yes') {
-      tipHtml += `<div class="reptile-tip tip-info">🙅 进食后24h内请勿上手，避免应激呕吐</div>`;
-    }
-  } else {
-    tipHtml = `<div class="reptile-tip tip-info">📋 还没有喂食记录，点击上方按钮添加</div>`;
-  }
-
-  const acceptedIcons = { yes: '✅', partial: '⚠️', no: '❌' };
-  const feedsHtml = feeds.length === 0 ? '' : feeds.map(f => `
-    <div class="reptile-log-item glass">
-      <div class="reptile-log-left">
-        <div class="reptile-log-title">${f.prey} · ${f.amount}</div>
-        <div class="reptile-log-meta">${f.date} ${f.supplement !== '无' ? '· 💊' + f.supplement : ''} ${f.gutload ? '· 肠调：' + f.gutload : ''}</div>
-        ${f.note ? `<div class="reptile-log-note">${f.note}</div>` : ''}
-      </div>
-      <div class="reptile-log-right">
-        <span class="reptile-log-status">${acceptedIcons[f.accepted] || '✅'}</span>
-        <button class="icon-btn-sm" onclick="deleteReptileFeedLog('${f.id}')">🗑️</button>
-      </div>
-    </div>`).join('');
-
-  list.innerHTML = tipHtml + feedsHtml;
-}
-
-// ── 健康追踪渲染 ──────────────────────────────────────────────
-function renderReptileHealthSection(reptile) {
-  const list = $('reptile-health-list');
-  if (!list) return;
-
-  const config = REPTILE_SPECIES_CONFIG[reptile.species] || REPTILE_SPECIES_CONFIG.other;
-  const weights = reptile.reptileWeights || [];
-  const sheds = reptile.shedLogs || [];
-  const defecs = reptile.defecLogs || [];
-
-  // 蜕皮预警
-  let shedTip = '';
-  if (sheds.length > 0) {
-    const lastShed = sheds[sheds.length - 1];
-    const daysSince = Math.floor((Date.now() - new Date(lastShed.date)) / 86400000);
-    if (daysSince > config.shedInterval * 1.3) {
-      shedTip = `<div class="reptile-tip tip-warn">⚠️ 距上次蜕皮已 ${daysSince} 天，超过常规周期（${config.shedInterval}天），请检查湿度和补充剂</div>`;
-    }
-    if (lastShed.complete !== 'complete') {
-      shedTip += `<div class="reptile-tip tip-warn">🚨 上次蜕皮不完整（${lastShed.complete}），请注意检查是否有残留死皮</div>`;
-    }
-  }
-
-  // 排泄预警
-  let defecTip = '';
-  if (defecs.length > 0) {
-    const lastDefec = defecs[defecs.length - 1];
-    const daysSince = Math.floor((Date.now() - new Date(lastDefec.date)) / 86400000);
-    if (['loose', 'bloody', 'urates_yellow'].includes(lastDefec.status)) {
-      defecTip = `<div class="reptile-tip tip-warn">🚨 上次排泄异常（${lastDefec.status}），建议保留样本照片并咨询兽医</div>`;
-    }
-  }
-
-  // 体重卡
-  const lastWeight = weights.slice(-1)[0];
-  const prevWeight = weights.slice(-2)[0];
-  let weightTrend = '';
-  if (lastWeight && prevWeight) {
-    const diff = (parseFloat(lastWeight.value) - parseFloat(prevWeight.value)).toFixed(1);
-    weightTrend = diff > 0
-      ? `<span style="color:#34d399">▲ ${diff}g</span>`
-      : diff < 0
-        ? `<span style="color:#f87171">▼ ${Math.abs(diff)}g</span>`
-        : `<span style="color:var(--text-tertiary)">→ 持平</span>`;
-    if (parseFloat(diff) < -5) {
-      defecTip += `<div class="reptile-tip tip-warn">⚠️ 体重下降 ${Math.abs(diff)}g，请关注是否拒食或寄生虫感染</div>`;
-    }
-  }
-
-  // 体重图表
-  let weightChart = '';
-  if (weights.length >= 2) {
-    const maxW = Math.max(...weights.map(w => parseFloat(w.value)));
-    const minW = Math.min(...weights.map(w => parseFloat(w.value)));
-    const range = maxW - minW || 1;
-    const pts = weights.slice(-8).map((w, i, arr) => {
-      const x = (i / (arr.length - 1)) * 100;
-      const y = 90 - ((parseFloat(w.value) - minW) / range) * 80;
-      return { x, y };
-    });
-    const path = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
-    weightChart = `
-      <div class="env-chart-title" style="margin-top:12px">体重曲线（近8次）</div>
-      <svg class="env-chart-svg" viewBox="0 0 100 60" preserveAspectRatio="none">
-        <path d="${path}" fill="none" stroke="var(--accent)" stroke-width="1.5" vector-effect="non-scaling-stroke"/>
-        ${pts.map(p => `<circle cx="${p.x}" cy="${p.y}" r="2" fill="var(--accent)"/>`).join('')}
-      </svg>`;
-  }
-
-  const shedCompleteMap = { complete: '✅ 完整', partial: '⚠️ 卡皮', eyes: '👁️ 眼镜', toes: '🦶 趾尖' };
-  const defecStatusMap = { normal: '✅ 正常', loose: '⚠️ 稀软', constipated: '🚨 便秘', urates_yellow: '⚠️ 尿酸黄', bloody: '🚨 带血' };
-
-  list.innerHTML = `
-    ${shedTip}${defecTip}
-    <div class="health-summary-row">
-      <div class="health-summary-card glass">
-        <div class="health-summary-icon">⚖️</div>
-        <div>
-          <div class="health-label">最新体重</div>
-          <div class="health-value">${lastWeight ? lastWeight.value + 'g' : '--'} ${weightTrend}</div>
-          ${lastWeight ? `<div class="health-meta">${lastWeight.date}</div>` : ''}
-        </div>
-      </div>
-      <div class="health-summary-card glass">
-        <div class="health-summary-icon">🐍</div>
-        <div>
-          <div class="health-label">上次蜕皮</div>
-          <div class="health-value">${sheds.length > 0 ? sheds[sheds.length-1].date : '--'}</div>
-          ${sheds.length > 0 ? `<div class="health-meta">${shedCompleteMap[sheds[sheds.length-1].complete]}</div>` : ''}
-        </div>
-      </div>
-    </div>
-    ${weightChart}
-    <div class="reptile-log-group-title">蜕皮记录</div>
-    ${sheds.length === 0 ? '<div class="empty-hint">暂无蜕皮记录</div>' :
-      sheds.slice().reverse().slice(0,5).map(s => `
-        <div class="reptile-log-item glass">
-          <div class="reptile-log-left">
-            <div class="reptile-log-title">🐍 蜕皮 · ${shedCompleteMap[s.complete] || s.complete}</div>
-            <div class="reptile-log-meta">${s.date}${s.note ? ' · ' + s.note : ''}</div>
-          </div>
-          <button class="icon-btn-sm" onclick="deleteReptileShed('${s.id}')">🗑️</button>
-        </div>`).join('')}
-    <div class="reptile-log-group-title">排泄记录</div>
-    ${defecs.length === 0 ? '<div class="empty-hint">暂无排泄记录</div>' :
-      defecs.slice().reverse().slice(0,5).map(d => `
-        <div class="reptile-log-item glass">
-          <div class="reptile-log-left">
-            <div class="reptile-log-title">💩 ${defecStatusMap[d.status] || d.status}</div>
-            <div class="reptile-log-meta">${d.date}${d.note ? ' · ' + d.note : ''}</div>
-          </div>
-          <button class="icon-btn-sm" onclick="deleteReptileDefec('${d.id}')">🗑️</button>
-        </div>`).join('')}`;
-}
-
-// ── CRUD 操作 ──────────────────────────────────────────────────
-function deleteReptileFeedLog(id) {
-  const r = appData.reptiles[currentReptileIndex]; if (!r) return;
-  r.reptileFeedLogs = (r.reptileFeedLogs || []).filter(f => f.id !== id);
-  saveData(); renderReptileFeedSection(r); showToast('记录已删除');
-}
-
-function deleteReptileShed(id) {
-  const r = appData.reptiles[currentReptileIndex]; if (!r) return;
-  r.shedLogs = (r.shedLogs || []).filter(s => s.id !== id);
-  saveData(); renderReptileHealthSection(r); showToast('记录已删除');
-}
-
-function deleteReptileDefec(id) {
-  const r = appData.reptiles[currentReptileIndex]; if (!r) return;
-  r.defecLogs = (r.defecLogs || []).filter(d => d.id !== id);
-  saveData(); renderReptileHealthSection(r); showToast('记录已删除');
-}
-
-function addReptileWeight() {
-  const r = appData.reptiles[currentReptileIndex]; if (!r) return;
-  const val = prompt('输入体重（克）：', '');
-  if (!val || isNaN(val)) return;
-  if (!r.reptileWeights) r.reptileWeights = [];
-  r.reptileWeights.push({ id: generateId(), date: formatDate(new Date()), value: parseFloat(val) });
-  saveData(); renderReptileHealthSection(r); showToast('体重已记录 ⚖️');
-}
-
-// ── 初始化 ────────────────────────────────────────────────────
-// ── 初始化 ────────────────────────────────────────────────────
-function initReptile() {
-  initPetTypeSwitcher();
-
-  // 添加爬宠保存
-  const saveBtn = $('btn-save-reptile');
-  if (saveBtn) {
-    saveBtn.addEventListener('click', () => {
-      const name = $('input-reptile-name').value.trim();
-      if (!name) { showToast('请输入爬宠名字', 'warning'); return; }
-      showToast('正在保存…', 'info');
-      const reptile = {
-        id: generateId(), name,
-        species:  $('input-reptile-species').value,
-        gender:   $('input-reptile-gender').value,
-        birthday: $('input-reptile-birthday').value,
-        morph:    $('input-reptile-morph').value.trim(),
-        envLogs: [], reptileFeedLogs: [], reptileWeights: [], shedLogs: [], defecLogs: []
-      };
-      if (!appData.reptiles) appData.reptiles = [];
-      appData.reptiles.push(reptile);
-      saveData();
-      closeModal('modal-add-reptile');
-      // 自动切换到爬宠区
-      currentReptileType = 'reptile';
-      currentReptileIndex = appData.reptiles.length - 1;
-      refreshPet();
-      showToast(escapeHtml(name) + ' 已添加 🦎', 'success');
-    });
-  }
-
-  // 环境记录保存
-  const saveEnv = $('btn-save-env-log');
-  if (saveEnv) {
-    saveEnv.addEventListener('click', () => {
-      const r = (appData.reptiles || [])[currentReptileIndex];
-      if (!r) return;
-      const hot      = $('input-env-hot').value;
-      const cool     = $('input-env-cool').value;
-      const night    = $('input-env-night').value;
-      const humidity = $('input-env-humidity').value;
-      const note     = $('input-env-note').value.trim();
-      if (!hot && !cool && !humidity) { showToast('请至少填写一项数据', 'warning'); return; }
-      showToast('正在保存…', 'info');
-      if (!r.envLogs) r.envLogs = [];
-      r.envLogs.push({ id: generateId(), date: formatDate(new Date()), hot, cool, night, humidity, note });
-      saveData();
-      closeModal('modal-add-env-log');
-      renderEnvSection(r);
-      showToast('环境数据已记录 🌡️', 'success');
-    });
-  }
-
-  // 喂食记录保存
-  const saveFeed = $('btn-save-reptile-feed');
-  if (saveFeed) {
-    saveFeed.addEventListener('click', () => {
-      const r = (appData.reptiles || [])[currentReptileIndex];
-      if (!r) return;
-      const preyTab   = document.querySelector('#reptile-prey-tabs .seg-tab.active');
-      const suppTab   = document.querySelector('#reptile-supplement-tabs .seg-tab.active');
-      const prey      = preyTab ? preyTab.dataset.prey : '蟋蟀';
-      const supplement = suppTab ? suppTab.dataset.supp : '无';
-      const amount    = $('input-reptile-prey-amount').value.trim();
-      const accepted  = $('input-reptile-feed-accepted').value;
-      const gutload   = $('input-reptile-gutload').value.trim();
-      const note      = $('input-reptile-feed-note').value.trim();
-      if (!amount) { showToast('请填写数量/大小', 'warning'); return; }
-      showToast('正在保存…', 'info');
-      if (!r.reptileFeedLogs) r.reptileFeedLogs = [];
-      r.reptileFeedLogs.push({ id: generateId(), date: formatDate(new Date()), prey, amount, accepted, supplement, gutload, note });
-      saveData();
-      closeModal('modal-add-reptile-feed');
-      renderReptileFeedSection(r);
-      showToast('喂食记录已保存 🦗', 'success');
-    });
-  }
-
-  // seg-tab 点击（猎物 & 补充剂）
-  document.addEventListener('click', e => {
-    const tab = e.target.closest('#reptile-prey-tabs .seg-tab, #reptile-supplement-tabs .seg-tab');
-    if (!tab) return;
-    const parent = tab.parentElement;
-    parent.querySelectorAll('.seg-tab').forEach(t => t.classList.remove('active'));
-    tab.classList.add('active');
-  });
-
-  // 蜕皮记录保存
-  const saveShed = $('btn-save-shed');
-  if (saveShed) {
-    saveShed.addEventListener('click', () => {
-      const r = (appData.reptiles || [])[currentReptileIndex];
-      if (!r) return;
-      const date     = $('input-shed-date').value;
-      const complete = $('input-shed-complete').value;
-      const note     = $('input-shed-note').value.trim();
-      if (!date) { showToast('请选择日期', 'warning'); return; }
-      showToast('正在保存…', 'info');
-      if (!r.shedLogs) r.shedLogs = [];
-      r.shedLogs.push({ id: generateId(), date, complete, note });
-      saveData();
-      closeModal('modal-add-shed');
-      renderReptileHealthSection(r);
-      showToast('蜕皮记录已保存 🐍', 'success');
-    });
-  }
-
-  // 排泄记录保存
-  const saveDefec = $('btn-save-defecation');
-  if (saveDefec) {
-    saveDefec.addEventListener('click', () => {
-      const r = (appData.reptiles || [])[currentReptileIndex];
-      if (!r) return;
-      const date   = $('input-defec-date').value;
-      const status = $('input-defec-status').value;
-      const note   = $('input-defec-note').value.trim();
-      if (!date) { showToast('请选择日期', 'warning'); return; }
-      showToast('正在保存…', 'info');
-      if (!r.defecLogs) r.defecLogs = [];
-      r.defecLogs.push({ id: generateId(), date, status, note });
-      saveData();
-      closeModal('modal-add-defecation');
-      renderReptileHealthSection(r);
-      showToast('排泄记录已保存 💩', 'success');
-    });
-  }
-}
-
-// ── 删除整只爬宠 ──────────────────────────────────────────────
-function deleteReptile(index) {
-  const reptile = (appData.reptiles || [])[index];
-  if (!reptile) return;
-  if (!confirm('确定要删除「' + reptile.name + '」吗？所有记录将一并删除，此操作不可撤销。')) return;
-  appData.reptiles.splice(index, 1);
-  if (currentReptileIndex >= appData.reptiles.length) {
-    currentReptileIndex = Math.max(0, appData.reptiles.length - 1);
-  }
-  saveData();
-  showToast(escapeHtml(reptile.name) + ' 已删除', 'info');
-  renderReptileContent();
-}
-
-// ── 爬宠问候语 ────────────────────────────────────────────────
-function getReptileGreeting(reptile) {
-  const config = REPTILE_SPECIES_CONFIG[reptile.species] || REPTILE_SPECIES_CONFIG.other;
-  const greetings = [
-    '嗯……我在晒太阳呢。',
-    '你来了，我感受到你的体温了。',
-    '今天温度还不错，我很舒服。',
-    '我在观察你，你也在观察我。',
-    '安静就是我的语言。'
-  ];
-  return greetings[Math.floor(Math.random() * greetings.length)];
 }
 
 // ── 爬宠 AI 对话 ──────────────────────────────────────────────
 async function sendReptileChat(reptile) {
   if (!reptile) reptile = (appData.reptiles || [])[currentReptileIndex];
   if (!reptile) return;
-
   const input    = $('reptile-chat-input');
   const userText = input ? input.value.trim() : '';
   if (!userText) return;
-
   const { apiBase, apiKey, apiModel } = appData.settings;
-  if (!apiBase || !apiKey) {
-    showToast('请先在设置中配置 AI 接口', 'warning');
-    return;
-  }
-
+  if (!apiBase || !apiKey) { showToast('请先在设置中配置 AI 接口', 'warning'); return; }
   input.value = '';
   appendReptileChatMsg('user', userText, reptile);
-
-  const pConfig  = getReptilePersonalityConfig(reptile);
-  const lastFeed = (reptile.reptileFeedLogs || []).slice(-1)[0];
-  const lastEnv  = (reptile.envLogs || []).slice(-1)[0];
-  const daysSinceFeed = lastFeed
-    ? Math.floor((Date.now() - new Date(lastFeed.date)) / 86400000)
-    : null;
-
-  const systemPrompt = pConfig.systemPrompt
+  const pConfig       = getReptilePersonalityConfig(reptile);
+  const lastFeed      = (reptile.reptileFeedLogs || []).slice(-1)[0];
+  const lastEnv       = (reptile.envLogs || []).slice(-1)[0];
+  const daysSinceFeed = lastFeed ? Math.floor((Date.now() - new Date(lastFeed.date)) / 86400000) : null;
+  const systemPrompt  = pConfig.systemPrompt
     + ' 你的名字是「' + reptile.name + '」。'
     + (daysSinceFeed !== null ? '距上次喂食' + daysSinceFeed + '天。' : '')
     + (lastEnv ? '当前热区' + (lastEnv.hot || '--') + '°C，湿度' + (lastEnv.humidity || '--') + '%。' : '');
-
   const loadingId = 'reptile-msg-' + Date.now();
   appendReptileChatMsg('pet', '……', loadingId, reptile);
-
   const loadingEl = document.getElementById(loadingId);
   if (loadingEl) {
     const textEl = loadingEl.querySelector('.tama-chat-text');
     if (textEl) textEl.innerHTML = '<span style="opacity:0.5;font-style:italic">正在思考…</span>';
   }
-
   try {
     const res = await fetch(apiBase + '/v1/chat/completions', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + apiKey
-      },
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
       body: JSON.stringify({
         model:       apiModel || 'gpt-3.5-turbo',
         messages:    [{ role: 'system', content: systemPrompt }, { role: 'user', content: userText }],
@@ -3476,9 +3222,7 @@ async function sendReptileChat(reptile) {
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data  = await res.json();
     const reply = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content)
-      ? data.choices[0].message.content.trim()
-      : '……';
-
+      ? data.choices[0].message.content.trim() : '……';
     const el = document.getElementById(loadingId);
     if (el) {
       const textEl = el.querySelector('.tama-chat-text');
@@ -3501,24 +3245,22 @@ async function sendReptileChat(reptile) {
 
 // ── 爬宠聊天消息追加 ──────────────────────────────────────────
 function appendReptileChatMsg(role, text, idOrReptile, reptile) {
-  // 兼容两种调用方式
   let msgId = null;
   if (typeof idOrReptile === 'string') {
-    msgId   = idOrReptile;
+    msgId = idOrReptile;
   } else if (idOrReptile && typeof idOrReptile === 'object') {
     reptile = idOrReptile;
   }
-
-  const messages = $('reptile-chat-messages');
   if (!reptile) reptile = (appData.reptiles || [])[currentReptileIndex];
-  const config   = reptile
+  const messages = $('reptile-chat-messages');
+  if (!messages) return;
+  const config = reptile
     ? (REPTILE_SPECIES_CONFIG[reptile.species] || REPTILE_SPECIES_CONFIG.other)
     : { emoji: '🦎' };
-
   const div = document.createElement('div');
   div.className = 'tama-chat-msg ' + role;
   if (msgId) div.id = msgId;
-    div.innerHTML = role === 'pet'
+  div.innerHTML = role === 'pet'
     ? '<span class="tama-chat-avatar">' + config.emoji + '</span><span class="tama-chat-text">' + escapeHtml(text) + '</span>'
     : '<span class="tama-chat-text">' + escapeHtml(text) + '</span>';
   messages.appendChild(div);
@@ -3526,10 +3268,10 @@ function appendReptileChatMsg(role, text, idOrReptile, reptile) {
 }
 
 
-
 /* ============================================================
-   区块结束：爬宠管理模块
+   区块结束：爬宠管理模块（完整重写）
    ============================================================ */
+
 
 /* ============================================================
    区块开始：背单词系统

@@ -3290,6 +3290,204 @@ function initPetTypeSwitcher() {
     refreshPet();
   });
 }
+// ── 体重记录 ──────────────────────────────────────────────────
+function addReptileWeight() {
+  const r = (appData.reptiles || [])[currentReptileIndex];
+  if (!r) return;
+  const weight = prompt('请输入当前体重（克）：');
+  if (!weight || isNaN(parseFloat(weight))) { showToast('请输入有效的体重数值', 'warning'); return; }
+  if (!r.reptileWeights) r.reptileWeights = [];
+  r.reptileWeights.push({ id: generateId(), date: formatDate(new Date()), weight: parseFloat(weight) });
+  saveData();
+  renderReptileHealthSection(r);
+  showToast('体重已记录 ⚖️', 'success');
+}
+
+// ── 环境监控渲染 ──────────────────────────────────────────────
+function renderEnvSection(reptile) {
+  const envGrid = $('env-grid');
+  const envWrap = $('env-chart-wrap');
+  if (!envGrid) return;
+
+  const logs = (reptile.envLogs || []).slice(-1)[0];
+  if (!logs) {
+    envGrid.innerHTML = '<div class="empty-state">暂无环境记录，点击「+ 记录」添加</div>';
+    if (envWrap) envWrap.innerHTML = '';
+    return;
+  }
+
+  envGrid.innerHTML = ''
+    + '<div class="env-item">'
+    +   '<span class="env-item-icon">🔥</span>'
+    +   '<span class="env-item-label">热区</span>'
+    +   '<span class="env-item-val">' + (logs.hot || '--') + '°C</span>'
+    + '</div>'
+    + '<div class="env-item">'
+    +   '<span class="env-item-icon">❄️</span>'
+    +   '<span class="env-item-label">冷区</span>'
+    +   '<span class="env-item-val">' + (logs.cool || '--') + '°C</span>'
+    + '</div>'
+    + '<div class="env-item">'
+    +   '<span class="env-item-icon">🌙</span>'
+    +   '<span class="env-item-label">夜温</span>'
+    +   '<span class="env-item-val">' + (logs.night || '--') + '°C</span>'
+    + '</div>'
+    + '<div class="env-item">'
+    +   '<span class="env-item-icon">💧</span>'
+    +   '<span class="env-item-label">湿度</span>'
+    +   '<span class="env-item-val">' + (logs.humidity || '--') + '%</span>'
+    + '</div>';
+
+  // 历史趋势（最近7条）
+  if (envWrap) {
+    const history = (reptile.envLogs || []).slice(-7);
+    if (history.length < 2) { envWrap.innerHTML = ''; return; }
+    let rows = '';
+    history.forEach(function(log) {
+      rows += '<div class="env-history-row">'
+        + '<span class="env-history-date">' + log.date + '</span>'
+        + '<span>热区 ' + (log.hot || '--') + '°C</span>'
+        + '<span>湿度 ' + (log.humidity || '--') + '%</span>'
+        + (log.note ? '<span class="env-history-note">' + escapeHtml(log.note) + '</span>' : '')
+        + '<button class="icon-btn" style="font-size:12px;width:28px;height:28px" onclick="deleteEnvLog(\'' + reptile.id + '\',\'' + log.id + '\')">🗑️</button>'
+        + '</div>';
+    });
+    envWrap.innerHTML = '<div class="env-history">' + rows + '</div>';
+  }
+}
+
+function deleteEnvLog(reptileId, logId) {
+  const r = (appData.reptiles || []).find(function(x) { return x.id === reptileId; });
+  if (!r) return;
+  r.envLogs = (r.envLogs || []).filter(function(l) { return l.id !== logId; });
+  saveData();
+  renderEnvSection(r);
+  showToast('记录已删除', 'info');
+}
+
+// ── 喂食日志渲染 ──────────────────────────────────────────────
+function renderReptileFeedSection(reptile) {
+  const list = $('reptile-feed-list');
+  if (!list) return;
+  const logs = (reptile.reptileFeedLogs || []).slice().reverse().slice(0, 10);
+  if (logs.length === 0) {
+    list.innerHTML = '<div class="empty-state">暂无喂食记录</div>';
+    return;
+  }
+  list.innerHTML = logs.map(function(log) {
+    const acceptedColor = log.accepted === '拒食' ? 'color:#f87171' : 'color:#4ade80';
+    return '<div class="reptile-feed-item glass">'
+      + '<div class="reptile-feed-main">'
+      +   '<span class="reptile-feed-prey">🦗 ' + escapeHtml(log.prey || '') + '</span>'
+      +   '<span class="reptile-feed-amount">' + escapeHtml(log.amount || '') + '</span>'
+      +   '<span style="font-size:12px;font-weight:600;' + acceptedColor + '">' + (log.accepted || '进食') + '</span>'
+      + '</div>'
+      + '<div class="reptile-feed-sub">'
+      +   '<span>' + log.date + '</span>'
+      +   (log.supplement && log.supplement !== '无' ? '<span>补充剂：' + escapeHtml(log.supplement) + '</span>' : '')
+      +   (log.note ? '<span>' + escapeHtml(log.note) + '</span>' : '')
+      + '</div>'
+      + '<button class="icon-btn" style="font-size:12px;width:28px;height:28px;flex-shrink:0" onclick="deleteReptileFeedLog(\'' + reptile.id + '\',\'' + log.id + '\')">🗑️</button>'
+      + '</div>';
+  }).join('');
+}
+
+function deleteReptileFeedLog(reptileId, logId) {
+  const r = (appData.reptiles || []).find(function(x) { return x.id === reptileId; });
+  if (!r) return;
+  r.reptileFeedLogs = (r.reptileFeedLogs || []).filter(function(l) { return l.id !== logId; });
+  saveData();
+  renderReptileFeedSection(r);
+  showToast('记录已删除', 'info');
+}
+
+// ── 健康追踪渲染 ──────────────────────────────────────────────
+function renderReptileHealthSection(reptile) {
+  const list = $('reptile-health-list');
+  if (!list) return;
+
+  const weights = (reptile.reptileWeights || []).slice().reverse().slice(0, 5);
+  const sheds   = (reptile.shedLogs       || []).slice().reverse().slice(0, 5);
+  const defecs  = (reptile.defecLogs      || []).slice().reverse().slice(0, 5);
+
+  let html = '';
+
+  // 体重
+  if (weights.length > 0) {
+    html += '<div class="reptile-health-group"><div class="reptile-health-group-title">⚖️ 体重记录</div>';
+    weights.forEach(function(w) {
+      html += '<div class="reptile-health-item glass">'
+        + '<span>⚖️ ' + w.weight + 'g</span>'
+        + '<span class="reptile-health-date">' + w.date + '</span>'
+        + '<button class="icon-btn" style="font-size:12px;width:28px;height:28px" onclick="deleteReptileWeight(\'' + reptile.id + '\',\'' + w.id + '\')">🗑️</button>'
+        + '</div>';
+    });
+    html += '</div>';
+  }
+
+  // 蜕皮
+  if (sheds.length > 0) {
+    html += '<div class="reptile-health-group"><div class="reptile-health-group-title">🐍 蜕皮记录</div>';
+    sheds.forEach(function(s) {
+      const completeColor = s.complete === '完整' ? 'color:#4ade80' : 'color:#f87171';
+      html += '<div class="reptile-health-item glass">'
+        + '<span style="' + completeColor + ';font-weight:600">' + (s.complete || '未知') + '</span>'
+        + '<span class="reptile-health-date">' + s.date + '</span>'
+        + (s.note ? '<span style="font-size:12px;color:var(--text-secondary)">' + escapeHtml(s.note) + '</span>' : '')
+        + '<button class="icon-btn" style="font-size:12px;width:28px;height:28px" onclick="deleteReptileShed(\'' + reptile.id + '\',\'' + s.id + '\')">🗑️</button>'
+        + '</div>';
+    });
+    html += '</div>';
+  }
+
+  // 排泄
+  if (defecs.length > 0) {
+    html += '<div class="reptile-health-group"><div class="reptile-health-group-title">💩 排泄记录</div>';
+    defecs.forEach(function(d) {
+      html += '<div class="reptile-health-item glass">'
+        + '<span>' + (d.status || '正常') + '</span>'
+        + '<span class="reptile-health-date">' + d.date + '</span>'
+        + (d.note ? '<span style="font-size:12px;color:var(--text-secondary)">' + escapeHtml(d.note) + '</span>' : '')
+        + '<button class="icon-btn" style="font-size:12px;width:28px;height:28px" onclick="deleteReptileDefec(\'' + reptile.id + '\',\'' + d.id + '\')">🗑️</button>'
+        + '</div>';
+    });
+    html += '</div>';
+  }
+
+  if (!html) {
+    list.innerHTML = '<div class="empty-state">暂无健康记录</div>';
+    return;
+  }
+  list.innerHTML = html;
+}
+
+function deleteReptileWeight(reptileId, weightId) {
+  const r = (appData.reptiles || []).find(function(x) { return x.id === reptileId; });
+  if (!r) return;
+  r.reptileWeights = (r.reptileWeights || []).filter(function(w) { return w.id !== weightId; });
+  saveData();
+  renderReptileHealthSection(r);
+  showToast('记录已删除', 'info');
+}
+
+function deleteReptileShed(reptileId, shedId) {
+  const r = (appData.reptiles || []).find(function(x) { return x.id === reptileId; });
+  if (!r) return;
+  r.shedLogs = (r.shedLogs || []).filter(function(s) { return s.id !== shedId; });
+  saveData();
+  renderReptileHealthSection(r);
+  showToast('记录已删除', 'info');
+}
+
+function deleteReptileDefec(reptileId, defecId) {
+  const r = (appData.reptiles || []).find(function(x) { return x.id === reptileId; });
+  if (!r) return;
+  r.defecLogs = (r.defecLogs || []).filter(function(d) { return d.id !== defecId; });
+  saveData();
+  renderReptileHealthSection(r);
+  showToast('记录已删除', 'info');
+}
+
 
 
 /* ============================================================

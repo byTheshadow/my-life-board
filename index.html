@@ -376,6 +376,78 @@
 <!-- ============================================================
      区块结束：宠物页 (Pet)
      ============================================================ -->
+<!-- ============================================================
+     区块开始：弹窗 - 编辑爬宠信息
+     ============================================================ -->
+<div class="modal-overlay" id="modal-edit-reptile" role="dialog" aria-modal="true">
+  <div class="modal-sheet modal-sheet-tall">
+    <div class="modal-handle"></div>
+    <div class="modal-title">✏️ 编辑爬宠信息</div>
+    <div class="modal-body">
+      <!-- 头像预览 -->
+      <div class="reptile-avatar-preview-wrap" id="reptile-avatar-preview-wrap">
+        <div class="reptile-avatar-preview" id="reptile-avatar-preview">🦎</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">名字</label>
+        <input type="text" class="form-input" id="edit-reptile-name" placeholder="爬宠名字">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">物种</label>
+          <select class="form-input" id="edit-reptile-species">
+            <option value="leopard_gecko">豹纹守宫</option>
+            <option value="crested_gecko">睫角守宫</option>
+            <option value="ball_python">球蟒</option>
+            <option value="corn_snake">玉米蛇</option>
+            <option value="bearded_dragon">胡子龙</option>
+            <option value="blue_tongue">蓝舌蜥</option>
+            <option value="other">其他</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">性别</label>
+          <select class="form-input" id="edit-reptile-gender">
+            <option value="male">♂ 公</option>
+            <option value="female">♀ 母</option>
+            <option value="unknown">未知</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">生日</label>
+          <input type="date" class="form-input" id="edit-reptile-birthday">
+        </div>
+        <div class="form-group">
+          <label class="form-label">品系 / Morph</label>
+          <input type="text" class="form-input" id="edit-reptile-morph" placeholder="如：白化、雪花">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">头像图片 URL</label>
+        <input type="text" class="form-input" id="edit-reptile-avatar-url"
+               placeholder="粘贴图片链接，留空则显示物种 emoji"
+               oninput="previewReptileAvatar(this.value)">
+      </div>
+      <div class="form-group">
+        <label class="form-label">备注</label>
+        <input type="text" class="form-input" id="edit-reptile-note" placeholder="可选，如：来源、购入日期…">
+      </div>
+      <div class="danger-zone">
+        <div class="danger-zone-title">⚠️ 危险操作</div>
+        <button class="btn btn-danger" id="btn-delete-reptile-edit">🗑️ 删除这只爬宠</button>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('modal-edit-reptile')">取消</button>
+        <button class="btn btn-primary" id="btn-save-edit-reptile">保存修改</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ============================================================
+     区块结束：弹窗 - 编辑爬宠信息
+     ============================================================ -->
 
 <!-- ============================================================
      区块开始：弹窗 - 饮食记录

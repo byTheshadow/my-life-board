@@ -221,6 +221,11 @@
     <button class="btn btn-primary" onclick="openModal('modal-add-pet')">添加第一只宠物</button>
   </div>
   <div id="pet-content" style="display:none">
+    <!-- 宠物类型切换：毛宠 / 爬宠 -->
+<div class="pet-type-switcher" id="pet-type-switcher">
+  <button class="pet-type-btn active" data-type="furry">🐾 毛宠</button>
+  <button class="pet-type-btn" data-type="reptile">🦎 爬宠</button>
+</div>
     <!-- 宠物切换标签 -->
     <div class="pet-tabs" id="pet-tabs"></div>
 
@@ -280,6 +285,43 @@
     <!-- 健康记录 -->
     <div class="pet-health-section" id="pet-health-section"></div>
   </div>
+  <!-- 爬宠区域（默认隐藏） -->
+<div id="reptile-content" style="display:none">
+  <!-- 爬宠标签切换 -->
+  <div class="pet-tabs" id="reptile-tabs"></div>
+
+  <!-- 环境监控卡 -->
+  <div class="reptile-env-section glass-card" id="reptile-env-section">
+    <div class="reptile-section-header">
+      <span>🌡️ 环境监控</span>
+      <button class="btn btn-primary btn-sm" id="btn-add-env-log">+ 记录</button>
+    </div>
+    <div class="env-grid" id="env-grid"></div>
+    <div class="env-chart-wrap" id="env-chart-wrap"></div>
+  </div>
+
+  <!-- 喂食日志 -->
+  <div class="reptile-feed-section glass-card" id="reptile-feed-section">
+    <div class="reptile-section-header">
+      <span>🦗 喂食日志</span>
+      <button class="btn btn-primary btn-sm" id="btn-add-reptile-feed">+ 喂食</button>
+    </div>
+    <div id="reptile-feed-list"></div>
+  </div>
+
+  <!-- 健康追踪 -->
+  <div class="reptile-health-section glass-card" id="reptile-health-section">
+    <div class="reptile-section-header">
+      <span>📊 健康追踪</span>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-secondary btn-sm" id="btn-add-weight-reptile">⚖️ 体重</button>
+        <button class="btn btn-secondary btn-sm" id="btn-add-shed">🐍 蜕皮</button>
+        <button class="btn btn-secondary btn-sm" id="btn-add-defecation">💩 排泄</button>
+      </div>
+    </div>
+    <div id="reptile-health-list"></div>
+  </div>
+</div>
 </div>
 <!-- ============================================================
      区块结束：宠物页 (Pet)
@@ -951,6 +993,214 @@ ambiguous | 模糊的，有歧义的 | The message was ambiguous.</code>
 <!-- ============================================================
      区块结束：弹窗 - 添加宠物
      ============================================================ -->
+     <!-- 弹窗：添加爬宠 -->
+<div class="modal-overlay" id="modal-add-reptile">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🦎 添加爬宠</div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">名字</label>
+        <input class="form-input" id="input-reptile-name" type="text" placeholder="例如：小橙">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">物种</label>
+          <select class="form-input" id="input-reptile-species">
+            <option value="leopard_gecko">豹纹守宫</option>
+            <option value="crested_gecko">睫角守宫</option>
+            <option value="ball_python">球蟒</option>
+            <option value="corn_snake">玉米蛇</option>
+            <option value="bearded_dragon">鬃狮蜥</option>
+            <option value="blue_tongue_skink">蓝舌石龙子</option>
+            <option value="other">其他</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">性别</label>
+          <select class="form-input" id="input-reptile-gender">
+            <option value="male">公</option>
+            <option value="female">母</option>
+            <option value="unknown">未知</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">出生/入手日期</label>
+          <input class="form-input" id="input-reptile-birthday" type="date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">变异/品系</label>
+          <input class="form-input" id="input-reptile-morph" type="text" placeholder="例如：高黄">
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('modal-add-reptile')">取消</button>
+        <button class="btn btn-primary" id="btn-save-reptile">保存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 弹窗：记录环境参数 -->
+<div class="modal-overlay" id="modal-add-env-log">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🌡️ 记录环境参数</div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">热区温度 (°C)</label>
+          <input class="form-input" id="input-env-hot" type="number" placeholder="32" step="0.1">
+        </div>
+        <div class="form-group">
+          <label class="form-label">冷区温度 (°C)</label>
+          <input class="form-input" id="input-env-cool" type="number" placeholder="24" step="0.1">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">夜间温度 (°C)</label>
+          <input class="form-input" id="input-env-night" type="number" placeholder="20" step="0.1">
+        </div>
+        <div class="form-group">
+          <label class="form-label">湿度 (%)</label>
+          <input class="form-input" id="input-env-humidity" type="number" placeholder="60" min="0" max="100">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">备注（如蜕皮期加湿、设备异常等）</label>
+        <input class="form-input" id="input-env-note" type="text" placeholder="可选">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('modal-add-env-log')">取消</button>
+        <button class="btn btn-primary" id="btn-save-env-log">保存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 弹窗：记录喂食 -->
+<div class="modal-overlay" id="modal-add-reptile-feed">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🦗 记录喂食</div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">猎物/食物类型</label>
+        <div class="seg-tabs" id="reptile-prey-tabs">
+          <button class="seg-tab active" data-prey="蟋蟀">🦗 蟋蟀</button>
+          <button class="seg-tab" data-prey="杜比亚">🪳 杜比亚</button>
+          <button class="seg-tab" data-prey="乳鼠">🐭 乳鼠</button>
+          <button class="seg-tab" data-prey="其他">📦 其他</button>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">数量/大小</label>
+          <input class="form-input" id="input-reptile-prey-amount" type="text" placeholder="例如：3只2cm">
+        </div>
+        <div class="form-group">
+          <label class="form-label">是否接受</label>
+          <select class="form-input" id="input-reptile-feed-accepted">
+            <option value="yes">✅ 正常进食</option>
+            <option value="partial">⚠️ 部分接受</option>
+            <option value="no">❌ 拒食</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">补充剂</label>
+        <div class="seg-tabs" id="reptile-supplement-tabs" style="flex-wrap:wrap">
+          <button class="seg-tab" data-supp="纯钙粉">🦴 纯钙</button>
+          <button class="seg-tab" data-supp="钙+D3">☀️ 钙+D3</button>
+          <button class="seg-tab" data-supp="复合维生素">💊 复合维</button>
+          <button class="seg-tab" data-supp="无">🚫 无</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">肠道调理记录（饲料虫喂了什么）</label>
+        <input class="form-input" id="input-reptile-gutload" type="text" placeholder="例如：胡萝卜+燕麦，可选">
+      </div>
+      <div class="form-group">
+        <label class="form-label">备注</label>
+        <input class="form-input" id="input-reptile-feed-note" type="text" placeholder="可选">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('modal-add-reptile-feed')">取消</button>
+        <button class="btn btn-primary" id="btn-save-reptile-feed">保存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 弹窗：蜕皮记录 -->
+<div class="modal-overlay" id="modal-add-shed">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🐍 蜕皮记录</div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">蜕皮日期</label>
+          <input class="form-input" id="input-shed-date" type="date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">是否完整</label>
+          <select class="form-input" id="input-shed-complete">
+            <option value="complete">✅ 完整</option>
+            <option value="partial">⚠️ 卡皮（局部）</option>
+            <option value="eyes">👁️ 眼镜卡皮</option>
+            <option value="toes">🦶 趾尖卡皮</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">备注（处理方式等）</label>
+        <textarea class="form-input form-textarea-sm" id="input-shed-note" placeholder="可选，如：温水泡澡15分钟后手动协助去皮"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('modal-add-shed')">取消</button>
+        <button class="btn btn-primary" id="btn-save-shed">保存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 弹窗：排泄记录 -->
+<div class="modal-overlay" id="modal-add-defecation">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">💩 排泄记录</div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">日期</label>
+          <input class="form-input" id="input-defec-date" type="date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">状态</label>
+          <select class="form-input" id="input-defec-status">
+            <option value="normal">✅ 正常</option>
+            <option value="loose">⚠️ 稀软</option>
+            <option value="constipated">🚨 便秘（超期未排）</option>
+            <option value="urates_yellow">⚠️ 尿酸发黄</option>
+            <option value="bloody">🚨 带血</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">备注（异常请拍照留存）</label>
+        <input class="form-input" id="input-defec-note" type="text" placeholder="可选">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('modal-add-defecation')">取消</button>
+        <button class="btn btn-primary" id="btn-save-defecation">保存</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ============================================================
      区块开始：弹窗 - 添加单词

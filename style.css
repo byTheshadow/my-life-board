@@ -4388,4 +4388,254 @@ body {
 /* ============================================================
    区块结束：Todo Checkbox 样式
    ============================================================ */
+/* ============================================================
+   区块开始：爬宠模块样式
+   ============================================================ */
 
+/* 物种类型切换器 */
+.pet-type-switcher {
+  display: flex;
+  gap: 4px;
+  margin: 0 24px 16px;
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  border: 1px solid var(--border-subtle);
+}
+
+.pet-type-btn {
+  flex: 1;
+  padding: 8px 0;
+  border: none;
+  border-radius: calc(var(--radius-sm) - 2px);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.pet-type-btn.active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(124,110,247,0.3);
+}
+
+/* 爬宠各区块卡片 */
+.reptile-env-section,
+.reptile-feed-section,
+.reptile-health-section {
+  margin: 0 24px 16px;
+  padding: 16px 18px;
+  border-radius: var(--radius-lg);
+}
+
+.reptile-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 14px;
+}
+
+/* 环境参数网格 */
+.env-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.env-cell {
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  text-align: center;
+  border: 1px solid var(--border-subtle);
+  transition: all var(--transition);
+}
+
+.env-cell.low { border-color: rgba(96,165,250,0.4); background: rgba(96,165,250,0.06); }
+.env-cell.high { border-color: rgba(249,115,22,0.4); background: rgba(249,115,22,0.06); }
+.env-cell.normal { border-color: rgba(52,211,153,0.3); }
+
+.env-cell-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.env-cell-value {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.env-cell-range {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+
+.env-cell-status {
+  font-size: 11px;
+  font-weight: 600;
+  margin-top: 4px;
+  color: var(--text-secondary);
+}
+
+/* 提示条 */
+.reptile-tip {
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+
+.tip-warn {
+  background: rgba(251,191,36,0.12);
+  border: 1px solid rgba(251,191,36,0.3);
+  color: #d97706;
+}
+
+.tip-ok {
+  background: rgba(52,211,153,0.10);
+  border: 1px solid rgba(52,211,153,0.25);
+  color: #059669;
+}
+
+.tip-info {
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+}
+
+/* 折线图 */
+.env-chart-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  margin-top: 10px;
+}
+
+.env-chart-svg {
+  width: 100%;
+  height: 60px;
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  box-sizing: border-box;
+  overflow: visible;
+}
+
+.env-chart-legend {
+  display: flex;
+  gap: 14px;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.env-chart-legend span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.env-chart-legend i {
+  display: inline-block;
+  width: 12px;
+  height: 3px;
+  border-radius: 99px;
+}
+
+/* 日志列表项 */
+.reptile-log-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 6px;
+  transition: all var(--transition);
+}
+
+.reptile-log-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.reptile-log-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.reptile-log-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.reptile-log-meta {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+
+.reptile-log-note {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-style: italic;
+  margin-top: 2px;
+}
+
+.reptile-log-status {
+  font-size: 16px;
+}
+
+.reptile-log-group-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin: 14px 0 6px;
+}
+
+/* 健康汇总行 */
+.health-summary-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.health-summary-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+}
+
+.health-summary-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   区块结束：爬宠模块样式
+   ============================================================ */

@@ -9,6 +9,8 @@ const defaultData = () => ({
   todos: [],
   anniversaries: [],
   pets: [],
+  reptiles: [],
+reptileStates: {},
   vocab: [],
   settings: {
     theme: 'light',
@@ -1808,6 +1810,11 @@ function getPetState(petId) {
 
 // ── 页面刷新 ──────────────────────────────────────────────────
 function refreshPet() {
+  // 爬宠模式下不走毛宠逻辑
+if (currentReptileType === 'reptile') {
+  renderReptileContent();
+  return;
+}
   if (appData.pets.length === 0) {
     $('pet-placeholder').style.display = 'flex';
     $('pet-content').style.display = 'none';
@@ -2578,6 +2585,551 @@ function animateTama(type) {
 
 /* ============================================================
    区块结束：宠物管理
+   ============================================================ */
+   /* ============================================================
+   区块开始：爬宠管理模块
+   ============================================================ */
+
+const REPTILE_SPECIES_CONFIG = {
+  leopard_gecko: {
+    label: '豹纹守宫', emoji: '🦎',
+    hotZone: [28, 32], coolZone: [22, 26], nightTemp: [18, 22], humidity: [30, 40],
+    feedInterval: 2, shedInterval: 30, uvb: false, notes: '夜行性，无需UVB；热区可用陶瓷加热灯'
+  },
+  crested_gecko: {
+    label: '睫角守宫', emoji: '🦎',
+    hotZone: [22, 26], coolZone: [18, 22], nightTemp: [16, 20], humidity: [60, 80],
+    feedInterval: 2, shedInterval: 21, uvb: false, notes: '高湿度物种，每天喷水1-2次；夏季注意降温'
+  },
+  ball_python: {
+    label: '球蟒', emoji: '🐍',
+    hotZone: [30, 33], coolZone: [24, 27], nightTemp: [22, 24], humidity: [60, 80],
+    feedInterval: 7, shedInterval: 42, uvb: false, notes: '热点区域需35°C晒点；拒食率高，记录有助判断发情/蜕皮'
+  },
+  corn_snake: {
+    label: '玉米蛇', emoji: '🐍',
+    hotZone: [28, 30], coolZone: [20, 24], nightTemp: [18, 22], humidity: [40, 60],
+    feedInterval: 7, shedInterval: 35, uvb: false, notes: '耐寒性强，新手友好；幼体每5天喂一次'
+  },
+  bearded_dragon: {
+    label: '鬃狮蜥', emoji: '🦎',
+    hotZone: [38, 42], coolZone: [25, 30], nightTemp: [18, 22], humidity: [30, 40],
+    feedInterval: 1, shedInterval: 21, uvb: true, notes: '必须提供UVB；热区晒点需42°C+；每天补钙粉'
+  },
+  blue_tongue_skink: {
+    label: '蓝舌石龙子', emoji: '🦎',
+    hotZone: [35, 38], coolZone: [24, 28], nightTemp: [18, 22], humidity: [40, 60],
+    feedInterval: 3, shedInterval: 35, uvb: true, notes: '杂食性；蔬菜占食谱约50%'
+  },
+  other: {
+    label: '其他', emoji: '🦎',
+    hotZone: [28, 32], coolZone: [22, 26], nightTemp: [20, 22], humidity: [50, 70],
+    feedInterval: 3, shedInterval: 30, uvb: false, notes: '请根据物种实际需求调整参数'
+  }
+};
+
+let currentReptileIndex = 0;
+let currentReptileType = 'furry'; // 'furry' | 'reptile'
+
+// ── 物种类型切换 ──────────────────────────────────────────────
+function initPetTypeSwitcher() {
+  const switcher = $('pet-type-switcher');
+  if (!switcher) return;
+  switcher.addEventListener('click', e => {
+    const btn = e.target.closest('.pet-type-btn');
+    if (!btn) return;
+    currentReptileType = btn.dataset.type;
+    switcher.querySelectorAll('.pet-type-btn').forEach(b => b.classList.toggle('active', b === btn));
+    if (currentReptileType === 'furry') {
+      $('pet-tabs').style.display = 'flex';
+      $('tama-zone') && ($('tama-zone').closest('.page') ? null : null);
+      $('pet-content').style.display = 'block';
+      $('reptile-content').style.display = 'none';
+      $('btn-add-pet').style.display = '';
+    } else {
+      $('pet-content').style.display = 'none';
+      $('reptile-content').style.display = 'block';
+      $('btn-add-pet').style.display = 'none';
+      renderReptileContent();
+    }
+  });
+}
+
+// ── 主渲染入口 ────────────────────────────────────────────────
+function renderReptileContent() {
+  const reptiles = appData.reptiles || [];
+  if (reptiles.length === 0) {
+    $('reptile-content').innerHTML = `
+      <div class="placeholder-page">
+        <span class="placeholder-icon">🦎</span>
+        <p>还没有添加爬宠</p>
+        <button class="btn btn-primary" onclick="openModal('modal-add-reptile')">添加第一只爬宠</button>
+      </div>`;
+    return;
+  }
+
+  // 恢复完整结构（如果被替换过）
+  if (!$('reptile-tabs')) {
+    $('reptile-content').innerHTML = `
+      <div class="pet-tabs" id="reptile-tabs"></div>
+      <div class="reptile-env-section glass-card" id="reptile-env-section">
+        <div class="reptile-section-header"><span>🌡️ 环境监控</span><button class="btn btn-primary btn-sm" id="btn-add-env-log">+ 记录</button></div>
+        <div class="env-grid" id="env-grid"></div>
+        <div class="env-chart-wrap" id="env-chart-wrap"></div>
+      </div>
+      <div class="reptile-feed-section glass-card" id="reptile-feed-section">
+        <div class="reptile-section-header"><span>🦗 喂食日志</span><button class="btn btn-primary btn-sm" id="btn-add-reptile-feed">+ 喂食</button></div>
+        <div id="reptile-feed-list"></div>
+      </div>
+      <div class="reptile-health-section glass-card" id="reptile-health-section">
+        <div class="reptile-section-header"><span>📊 健康追踪</span>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-secondary btn-sm" id="btn-add-weight-reptile">⚖️ 体重</button>
+            <button class="btn btn-secondary btn-sm" id="btn-add-shed">🐍 蜕皮</button>
+            <button class="btn btn-secondary btn-sm" id="btn-add-defecation">💩 排泄</button>
+          </div>
+        </div>
+        <div id="reptile-health-list"></div>
+      </div>`;
+    bindReptileSectionBtns();
+  }
+
+  const tabs = $('reptile-tabs');
+  tabs.innerHTML = reptiles.map((r, i) =>
+    `<button class="pet-tab ${i === currentReptileIndex ? 'active' : ''}" data-index="${i}">${REPTILE_SPECIES_CONFIG[r.species]?.emoji || '🦎'} ${r.name}</button>`
+  ).join('');
+  tabs.querySelectorAll('.pet-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      currentReptileIndex = parseInt(tab.dataset.index);
+      renderReptileContent();
+    });
+  });
+
+  const reptile = reptiles[currentReptileIndex];
+  if (!reptile) return;
+  renderEnvSection(reptile);
+  renderReptileFeedSection(reptile);
+  renderReptileHealthSection(reptile);
+}
+
+// ── 绑定区域按钮 ──────────────────────────────────────────────
+function bindReptileSectionBtns() {
+  const addEnv = $('btn-add-env-log');
+  if (addEnv) addEnv.addEventListener('click', () => openModal('modal-add-env-log'));
+
+  const addFeed = $('btn-add-reptile-feed');
+  if (addFeed) addFeed.addEventListener('click', () => openModal('modal-add-reptile-feed'));
+
+  const addWeight = $('btn-add-weight-reptile');
+  if (addWeight) addWeight.addEventListener('click', addReptileWeight);
+
+  const addShed = $('btn-add-shed');
+  if (addShed) addShed.addEventListener('click', () => {
+    $('input-shed-date').value = formatDate(new Date());
+    openModal('modal-add-shed');
+  });
+
+  const addDefec = $('btn-add-defecation');
+  if (addDefec) addDefec.addEventListener('click', () => {
+    $('input-defec-date').value = formatDate(new Date());
+    openModal('modal-add-defecation');
+  });
+}
+
+// ── 环境监控渲染 ──────────────────────────────────────────────
+function renderEnvSection(reptile) {
+  const envGrid = $('env-grid');
+  const chartWrap = $('env-chart-wrap');
+  if (!envGrid || !chartWrap) return;
+
+  const config = REPTILE_SPECIES_CONFIG[reptile.species] || REPTILE_SPECIES_CONFIG.other;
+  const logs = (reptile.envLogs || []).slice(-1)[0]; // 最新一条
+
+  const makeCell = (label, value, unit, min, max) => {
+    const num = parseFloat(value);
+    let status = 'normal';
+    if (!isNaN(num)) {
+      if (num < min) status = 'low';
+      else if (num > max) status = 'high';
+    }
+    const statusText = { normal: '✅ 正常', low: '❄️ 偏低', high: '🔥 偏高' };
+    return `<div class="env-cell glass ${status}">
+      <div class="env-cell-label">${label}</div>
+      <div class="env-cell-value">${value !== undefined && value !== '' ? value + unit : '--'}</div>
+      <div class="env-cell-range">${min}~${max}${unit}</div>
+      <div class="env-cell-status">${value !== undefined && value !== '' ? statusText[status] : '暂无数据'}</div>
+    </div>`;
+  };
+
+  envGrid.innerHTML = [
+    makeCell('🔥 热区', logs?.hot, '°C', config.hotZone[0], config.hotZone[1]),
+    makeCell('❄️ 冷区', logs?.cool, '°C', config.coolZone[0], config.coolZone[1]),
+    makeCell('🌙 夜间', logs?.night, '°C', config.nightTemp[0], config.nightTemp[1]),
+    makeCell('💧 湿度', logs?.humidity, '%', config.humidity[0], config.humidity[1])
+  ].join('');
+
+  // UVB 提示
+  const uvbTip = config.uvb
+    ? `<div class="reptile-tip tip-warn">☀️ <strong>${config.label}</strong> 需要 UVB 灯，建议 10-12h 光照周期</div>`
+    : '';
+  const speciesTip = `<div class="reptile-tip tip-info">💡 ${config.notes}</div>`;
+
+  // 温度曲线（近7条记录）
+  const recentLogs = (reptile.envLogs || []).slice(-7);
+  let chartHtml = '';
+  if (recentLogs.length >= 2) {
+    const maxTemp = 45;
+    const points = recentLogs.map((l, i) => {
+      const x = (i / (recentLogs.length - 1)) * 100;
+      const yHot = 100 - (parseFloat(l.hot) / maxTemp) * 100;
+      const yCool = 100 - (parseFloat(l.cool) / maxTemp) * 100;
+      return { x, yHot, yCool, date: l.date };
+    });
+    const hotPath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.yHot}`).join(' ');
+    const coolPath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.yCool}`).join(' ');
+    chartHtml = `
+      <div class="env-chart-title">近期温度趋势</div>
+      <svg class="env-chart-svg" viewBox="0 0 100 60" preserveAspectRatio="none">
+        <path d="${hotPath}" fill="none" stroke="#f97316" stroke-width="1.5" vector-effect="non-scaling-stroke"/>
+        <path d="${coolPath}" fill="none" stroke="#60a5fa" stroke-width="1.5" vector-effect="non-scaling-stroke"/>
+        ${points.map(p => `
+          <circle cx="${p.x}" cy="${p.yHot}" r="2" fill="#f97316"/>
+          <circle cx="${p.x}" cy="${p.yCool}" r="2" fill="#60a5fa"/>
+        `).join('')}
+      </svg>
+      <div class="env-chart-legend">
+        <span><i style="background:#f97316"></i>热区</span>
+        <span><i style="background:#60a5fa"></i>冷区</span>
+      </div>`;
+  }
+
+  chartWrap.innerHTML = uvbTip + speciesTip + chartHtml;
+
+  // 加热设备检查提醒
+  const lastLog = (reptile.envLogs || []).slice(-1)[0];
+  if (lastLog) {
+    const daysSince = Math.floor((Date.now() - new Date(lastLog.date)) / 86400000);
+    if (daysSince > 3) {
+      chartWrap.innerHTML += `<div class="reptile-tip tip-warn">⚠️ 已 ${daysSince} 天未记录温湿度，请检查加热设备是否正常运行</div>`;
+    }
+  }
+}
+
+// ── 喂食日志渲染 ──────────────────────────────────────────────
+function renderReptileFeedSection(reptile) {
+  const list = $('reptile-feed-list');
+  if (!list) return;
+
+  const config = REPTILE_SPECIES_CONFIG[reptile.species] || REPTILE_SPECIES_CONFIG.other;
+  const feeds = (reptile.reptileFeedLogs || []).slice().reverse().slice(0, 10);
+  const lastFeed = (reptile.reptileFeedLogs || []).slice(-1)[0];
+
+  let tipHtml = '';
+  if (lastFeed) {
+    const daysSince = Math.floor((Date.now() - new Date(lastFeed.date)) / 86400000);
+    if (daysSince >= config.feedInterval) {
+      tipHtml = `<div class="reptile-tip tip-warn">⏰ 距上次喂食已 ${daysSince} 天，建议今天喂食</div>`;
+    } else {
+      tipHtml = `<div class="reptile-tip tip-ok">✅ ${daysSince} 天前已喂食，下次约 ${config.feedInterval - daysSince} 天后</div>`;
+    }
+    if (lastFeed.accepted === 'yes') {
+      tipHtml += `<div class="reptile-tip tip-info">🙅 进食后24h内请勿上手，避免应激呕吐</div>`;
+    }
+  } else {
+    tipHtml = `<div class="reptile-tip tip-info">📋 还没有喂食记录，点击上方按钮添加</div>`;
+  }
+
+  const acceptedIcons = { yes: '✅', partial: '⚠️', no: '❌' };
+  const feedsHtml = feeds.length === 0 ? '' : feeds.map(f => `
+    <div class="reptile-log-item glass">
+      <div class="reptile-log-left">
+        <div class="reptile-log-title">${f.prey} · ${f.amount}</div>
+        <div class="reptile-log-meta">${f.date} ${f.supplement !== '无' ? '· 💊' + f.supplement : ''} ${f.gutload ? '· 肠调：' + f.gutload : ''}</div>
+        ${f.note ? `<div class="reptile-log-note">${f.note}</div>` : ''}
+      </div>
+      <div class="reptile-log-right">
+        <span class="reptile-log-status">${acceptedIcons[f.accepted] || '✅'}</span>
+        <button class="icon-btn-sm" onclick="deleteReptileFeedLog('${f.id}')">🗑️</button>
+      </div>
+    </div>`).join('');
+
+  list.innerHTML = tipHtml + feedsHtml;
+}
+
+// ── 健康追踪渲染 ──────────────────────────────────────────────
+function renderReptileHealthSection(reptile) {
+  const list = $('reptile-health-list');
+  if (!list) return;
+
+  const config = REPTILE_SPECIES_CONFIG[reptile.species] || REPTILE_SPECIES_CONFIG.other;
+  const weights = reptile.reptileWeights || [];
+  const sheds = reptile.shedLogs || [];
+  const defecs = reptile.defecLogs || [];
+
+  // 蜕皮预警
+  let shedTip = '';
+  if (sheds.length > 0) {
+    const lastShed = sheds[sheds.length - 1];
+    const daysSince = Math.floor((Date.now() - new Date(lastShed.date)) / 86400000);
+    if (daysSince > config.shedInterval * 1.3) {
+      shedTip = `<div class="reptile-tip tip-warn">⚠️ 距上次蜕皮已 ${daysSince} 天，超过常规周期（${config.shedInterval}天），请检查湿度和补充剂</div>`;
+    }
+    if (lastShed.complete !== 'complete') {
+      shedTip += `<div class="reptile-tip tip-warn">🚨 上次蜕皮不完整（${lastShed.complete}），请注意检查是否有残留死皮</div>`;
+    }
+  }
+
+  // 排泄预警
+  let defecTip = '';
+  if (defecs.length > 0) {
+    const lastDefec = defecs[defecs.length - 1];
+    const daysSince = Math.floor((Date.now() - new Date(lastDefec.date)) / 86400000);
+    if (['loose', 'bloody', 'urates_yellow'].includes(lastDefec.status)) {
+      defecTip = `<div class="reptile-tip tip-warn">🚨 上次排泄异常（${lastDefec.status}），建议保留样本照片并咨询兽医</div>`;
+    }
+  }
+
+  // 体重卡
+  const lastWeight = weights.slice(-1)[0];
+  const prevWeight = weights.slice(-2)[0];
+  let weightTrend = '';
+  if (lastWeight && prevWeight) {
+    const diff = (parseFloat(lastWeight.value) - parseFloat(prevWeight.value)).toFixed(1);
+    weightTrend = diff > 0
+      ? `<span style="color:#34d399">▲ ${diff}g</span>`
+      : diff < 0
+        ? `<span style="color:#f87171">▼ ${Math.abs(diff)}g</span>`
+        : `<span style="color:var(--text-tertiary)">→ 持平</span>`;
+    if (parseFloat(diff) < -5) {
+      defecTip += `<div class="reptile-tip tip-warn">⚠️ 体重下降 ${Math.abs(diff)}g，请关注是否拒食或寄生虫感染</div>`;
+    }
+  }
+
+  // 体重图表
+  let weightChart = '';
+  if (weights.length >= 2) {
+    const maxW = Math.max(...weights.map(w => parseFloat(w.value)));
+    const minW = Math.min(...weights.map(w => parseFloat(w.value)));
+    const range = maxW - minW || 1;
+    const pts = weights.slice(-8).map((w, i, arr) => {
+      const x = (i / (arr.length - 1)) * 100;
+      const y = 90 - ((parseFloat(w.value) - minW) / range) * 80;
+      return { x, y };
+    });
+    const path = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+    weightChart = `
+      <div class="env-chart-title" style="margin-top:12px">体重曲线（近8次）</div>
+      <svg class="env-chart-svg" viewBox="0 0 100 60" preserveAspectRatio="none">
+        <path d="${path}" fill="none" stroke="var(--accent)" stroke-width="1.5" vector-effect="non-scaling-stroke"/>
+        ${pts.map(p => `<circle cx="${p.x}" cy="${p.y}" r="2" fill="var(--accent)"/>`).join('')}
+      </svg>`;
+  }
+
+  const shedCompleteMap = { complete: '✅ 完整', partial: '⚠️ 卡皮', eyes: '👁️ 眼镜', toes: '🦶 趾尖' };
+  const defecStatusMap = { normal: '✅ 正常', loose: '⚠️ 稀软', constipated: '🚨 便秘', urates_yellow: '⚠️ 尿酸黄', bloody: '🚨 带血' };
+
+  list.innerHTML = `
+    ${shedTip}${defecTip}
+    <div class="health-summary-row">
+      <div class="health-summary-card glass">
+        <div class="health-summary-icon">⚖️</div>
+        <div>
+          <div class="health-label">最新体重</div>
+          <div class="health-value">${lastWeight ? lastWeight.value + 'g' : '--'} ${weightTrend}</div>
+          ${lastWeight ? `<div class="health-meta">${lastWeight.date}</div>` : ''}
+        </div>
+      </div>
+      <div class="health-summary-card glass">
+        <div class="health-summary-icon">🐍</div>
+        <div>
+          <div class="health-label">上次蜕皮</div>
+          <div class="health-value">${sheds.length > 0 ? sheds[sheds.length-1].date : '--'}</div>
+          ${sheds.length > 0 ? `<div class="health-meta">${shedCompleteMap[sheds[sheds.length-1].complete]}</div>` : ''}
+        </div>
+      </div>
+    </div>
+    ${weightChart}
+    <div class="reptile-log-group-title">蜕皮记录</div>
+    ${sheds.length === 0 ? '<div class="empty-hint">暂无蜕皮记录</div>' :
+      sheds.slice().reverse().slice(0,5).map(s => `
+        <div class="reptile-log-item glass">
+          <div class="reptile-log-left">
+            <div class="reptile-log-title">🐍 蜕皮 · ${shedCompleteMap[s.complete] || s.complete}</div>
+            <div class="reptile-log-meta">${s.date}${s.note ? ' · ' + s.note : ''}</div>
+          </div>
+          <button class="icon-btn-sm" onclick="deleteReptileShed('${s.id}')">🗑️</button>
+        </div>`).join('')}
+    <div class="reptile-log-group-title">排泄记录</div>
+    ${defecs.length === 0 ? '<div class="empty-hint">暂无排泄记录</div>' :
+      defecs.slice().reverse().slice(0,5).map(d => `
+        <div class="reptile-log-item glass">
+          <div class="reptile-log-left">
+            <div class="reptile-log-title">💩 ${defecStatusMap[d.status] || d.status}</div>
+            <div class="reptile-log-meta">${d.date}${d.note ? ' · ' + d.note : ''}</div>
+          </div>
+          <button class="icon-btn-sm" onclick="deleteReptileDefec('${d.id}')">🗑️</button>
+        </div>`).join('')}`;
+}
+
+// ── CRUD 操作 ──────────────────────────────────────────────────
+function deleteReptileFeedLog(id) {
+  const r = appData.reptiles[currentReptileIndex]; if (!r) return;
+  r.reptileFeedLogs = (r.reptileFeedLogs || []).filter(f => f.id !== id);
+  saveData(); renderReptileFeedSection(r); showToast('记录已删除');
+}
+
+function deleteReptileShed(id) {
+  const r = appData.reptiles[currentReptileIndex]; if (!r) return;
+  r.shedLogs = (r.shedLogs || []).filter(s => s.id !== id);
+  saveData(); renderReptileHealthSection(r); showToast('记录已删除');
+}
+
+function deleteReptileDefec(id) {
+  const r = appData.reptiles[currentReptileIndex]; if (!r) return;
+  r.defecLogs = (r.defecLogs || []).filter(d => d.id !== id);
+  saveData(); renderReptileHealthSection(r); showToast('记录已删除');
+}
+
+function addReptileWeight() {
+  const r = appData.reptiles[currentReptileIndex]; if (!r) return;
+  const val = prompt('输入体重（克）：', '');
+  if (!val || isNaN(val)) return;
+  if (!r.reptileWeights) r.reptileWeights = [];
+  r.reptileWeights.push({ id: generateId(), date: formatDate(new Date()), value: parseFloat(val) });
+  saveData(); renderReptileHealthSection(r); showToast('体重已记录 ⚖️');
+}
+
+// ── 初始化 ────────────────────────────────────────────────────
+function initReptile() {
+  initPetTypeSwitcher();
+
+  // 页头添加爬宠按钮（复用 btn-add-pet 区域）
+  const addPetBtn = $('btn-add-pet');
+  if (addPetBtn && !$('btn-add-reptile-header')) {
+    const btn = document.createElement('button');
+    btn.className = 'icon-btn';
+    btn.id = 'btn-add-reptile-header';
+    btn.textContent = '🦎';
+    btn.title = '添加爬宠';
+    btn.style.display = 'none';
+    btn.addEventListener('click', () => openModal('modal-add-reptile'));
+    addPetBtn.parentElement.appendChild(btn);
+  }
+
+  // 添加爬宠保存
+  const saveBtn = $('btn-save-reptile');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', () => {
+      const name = $('input-reptile-name').value.trim();
+      if (!name) { showToast('请输入爬宠名字', 'warning'); return; }
+      const reptile = {
+        id: generateId(), name,
+        species: $('input-reptile-species').value,
+        gender: $('input-reptile-gender').value,
+        birthday: $('input-reptile-birthday').value,
+        morph: $('input-reptile-morph').value.trim(),
+        envLogs: [], reptileFeedLogs: [], reptileWeights: [], shedLogs: [], defecLogs: []
+      };
+      if (!appData.reptiles) appData.reptiles = [];
+      appData.reptiles.push(reptile);
+      saveData();
+      closeModal('modal-add-reptile');
+      renderReptileContent();
+      showToast(`${name} 已添加 🦎`);
+    });
+  }
+
+  // 环境记录保存
+  const saveEnv = $('btn-save-env-log');
+  if (saveEnv) {
+    saveEnv.addEventListener('click', () => {
+      const r = appData.reptiles[currentReptileIndex]; if (!r) return;
+      const hot = $('input-env-hot').value;
+      const cool = $('input-env-cool').value;
+      const night = $('input-env-night').value;
+      const humidity = $('input-env-humidity').value;
+      const note = $('input-env-note').value.trim();
+      if (!hot && !cool && !humidity) { showToast('请至少填写一项数据', 'warning'); return; }
+      if (!r.envLogs) r.envLogs = [];
+      r.envLogs.push({ id: generateId(), date: formatDate(new Date()), hot, cool, night, humidity, note });
+      saveData();
+      closeModal('modal-add-env-log');
+      renderEnvSection(r);
+      showToast('环境数据已记录 🌡️');
+    });
+  }
+
+  // 喂食记录保存
+  const saveFeed = $('btn-save-reptile-feed');
+  if (saveFeed) {
+    saveFeed.addEventListener('click', () => {
+      const r = appData.reptiles[currentReptileIndex]; if (!r) return;
+      const preyTab = document.querySelector('#reptile-prey-tabs .seg-tab.active');
+      const suppTab = document.querySelector('#reptile-supplement-tabs .seg-tab.active');
+      const prey = preyTab ? preyTab.dataset.prey : '蟋蟀';
+      const supplement = suppTab ? suppTab.dataset.supp : '无';
+      const amount = $('input-reptile-prey-amount').value.trim();
+      const accepted = $('input-reptile-feed-accepted').value;
+      const gutload = $('input-reptile-gutload').value.trim();
+      const note = $('input-reptile-feed-note').value.trim();
+      if (!amount) { showToast('请填写数量/大小', 'warning'); return; }
+      if (!r.reptileFeedLogs) r.reptileFeedLogs = [];
+      r.reptileFeedLogs.push({ id: generateId(), date: formatDate(new Date()), prey, amount, accepted, supplement, gutload, note });
+      saveData();
+      closeModal('modal-add-reptile-feed');
+      renderReptileFeedSection(r);
+      showToast('喂食记录已保存 🦗');
+    });
+  }
+
+  // seg-tab 点击（猎物 & 补充剂）
+  document.addEventListener('click', e => {
+    const tab = e.target.closest('#reptile-prey-tabs .seg-tab, #reptile-supplement-tabs .seg-tab');
+    if (!tab) return;
+    const parent = tab.parentElement;
+    parent.querySelectorAll('.seg-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+  });
+
+  // 蜕皮记录保存
+  const saveShed = $('btn-save-shed');
+  if (saveShed) {
+    saveShed.addEventListener('click', () => {
+      const r = appData.reptiles[currentReptileIndex]; if (!r) return;
+      const date = $('input-shed-date').value;
+      const complete = $('input-shed-complete').value;
+      const note = $('input-shed-note').value.trim();
+      if (!date) { showToast('请选择日期', 'warning'); return; }
+      if (!r.shedLogs) r.shedLogs = [];
+      r.shedLogs.push({ id: generateId(), date, complete, note });
+      saveData();
+      closeModal('modal-add-shed');
+      renderReptileHealthSection(r);
+      showToast('蜕皮记录已保存 🐍');
+    });
+  }
+
+  // 排泄记录保存
+  const saveDefec = $('btn-save-defecation');
+  if (saveDefec) {
+    saveDefec.addEventListener('click', () => {
+      const r = appData.reptiles[currentReptileIndex]; if (!r) return;
+      const date = $('input-defec-date').value;
+      const status = $('input-defec-status').value;
+      const note = $('input-defec-note').value.trim();
+      if (!date) { showToast('请选择日期', 'warning'); return; }
+      if (!r.defecLogs) r.defecLogs = [];
+      r.defecLogs.push({ id: generateId(), date, status, note });
+      saveData();
+      closeModal('modal-add-defecation');
+      renderReptileHealthSection(r);
+      showToast('排泄记录已保存 💩');
+    });
+  }
+}
+
+/* ============================================================
+   区块结束：爬宠管理模块
    ============================================================ */
 
 /* ============================================================
@@ -3588,6 +4140,7 @@ function init() {
   initNotifications();
   initServiceWorker();
   initBatchOps();
+  initReptile();
   initPickDateModal();
 
 
@@ -3603,6 +4156,7 @@ function init() {
   $('input-todo-date').value = formatDate(new Date());
   $('input-anniv-date').value = formatDate(new Date());
 }
+
 
 // DOM Ready
 document.addEventListener('DOMContentLoaded', init);

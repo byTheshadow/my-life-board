@@ -3266,6 +3266,21 @@ function appendReptileChatMsg(role, text, idOrReptile, reptile) {
   messages.appendChild(div);
   messages.scrollTop = messages.scrollHeight;
 }
+let currentReptileType  = 'furry';
+let currentReptileIndex = 0;
+
+//── 物种类型切换 ──────────────────────────────────────────────
+function initPetTypeSwitcher() {
+  const switcher = $('pet-type-switcher');
+  if (!switcher || switcher._bound) return;
+  switcher._bound = true;
+  switcher.addEventListener('click', function(e) {
+    const btn = e.target.closest('.pet-type-btn');
+    if (!btn) return;
+    currentReptileType = btn.dataset.type;
+    refreshPet();
+  });
+}
 
 
 /* ============================================================
